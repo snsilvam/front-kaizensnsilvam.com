@@ -1,7 +1,6 @@
 import type { ApiErrorResponse } from '../types/api';
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
-const API_KEY = import.meta.env.VITE_API_KEY ?? '';
 
 /** Error de API con el status HTTP para poder distinguir casos en la UI. */
 export class ApiError extends Error {
@@ -16,14 +15,12 @@ export class ApiError extends Error {
 
 /**
  * Unico punto de salida hacia el backend.
- * Siempre envia el header X-API-Key.
  */
 export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Key': API_KEY,
       ...init.headers,
     },
   });

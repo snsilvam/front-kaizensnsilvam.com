@@ -7,7 +7,7 @@ Autenticacion con Firebase Authentication (Google). Sin Redux, sin router.
 
 ```bash
 npm install
-cp .env.example .env   # completar VITE_API_URL, VITE_API_KEY y VITE_FIREBASE_*
+cp .env.example .env   # completar VITE_API_URL y VITE_FIREBASE_*
 npm run dev
 ```
 
@@ -27,9 +27,8 @@ Identity) con provider y service account propios del frontend
 (`github-frontend-provider` / `github-actions-frontend@`), separados de los del
 backend.
 
-`VITE_API_URL` y `VITE_API_KEY` se inyectan como build args porque Vite las
-incrusta en el bundle; configurarlas en el repo de GitHub como variable
-(`vars.VITE_API_URL`) y secreto (`secrets.VITE_API_KEY`).
+`VITE_API_URL` se inyecta como build arg porque Vite la incrusta en el bundle;
+configurarla en el repositorio de GitHub como variable (`vars.VITE_API_URL`).
 
 Las cuatro `VITE_FIREBASE_*` tambien van como build args, configuradas como
 variables del repo (`vars.VITE_FIREBASE_*`). No son secretos: la config web de
@@ -42,14 +41,13 @@ src/
   auth/         capa de autenticacion (ver mas abajo)
   components/   Card, Loading, ErrorMessage, PendingList, AppLayout
   pages/        Home.tsx, Login.tsx, Sebas.tsx
-  services/     api.ts (fetch + header X-API-Key), dashboard.ts, format.ts
+  services/     api.ts (fetch), dashboard.ts, format.ts
   hooks/        useDashboard.ts
   types/        dashboard.ts, api.ts
   App.tsx
 ```
 
-Toda salida a red pasa por `services/api.ts`, que agrega el header
-`X-API-Key` (valor de `VITE_API_KEY`) en cada peticion.
+Toda salida a red pasa por `services/api.ts`.
 
 ## Autenticacion
 
@@ -74,13 +72,9 @@ propio (`uid`, `email`, `displayName`).
 Para proteger solo una parte de la UI, envolver ese bloque en
 `<ProtectedRoute>` en lugar de `App` completo.
 
-El backend sigue autenticando con `X-API-Key`. Cuando valide Firebase ID
-Tokens, el cambio se limita a `services/api.ts`: usar `getIdToken()` del
-contexto y enviarlo como `Authorization: Bearer <token>`.
-
-> Nota: al ser una app de navegador, `VITE_API_KEY` queda incrustada en el
-> bundle y es visible para cualquiera. Sirve como clave de aplicacion frente
-> al backend, no como secreto de usuario.
+El backend no recibe credenciales del frontend por ahora. Cuando valide
+Firebase ID Tokens, se podra enviar `Authorization: Bearer <token>` desde
+`services/api.ts`.
 
 ## Contrato esperado: `GET /dashboard`
 
