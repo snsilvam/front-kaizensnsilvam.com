@@ -19,7 +19,9 @@ Push a `main` dispara `.github/workflows/deploy.yml`: typecheck, build de la
 imagen Docker (Vite → nginx en el puerto 8080), push a Artifact Registry
 (`us-central1-docker.pkg.dev/kaizensnsilvam/containers/kaizensnsilvam-frontend`)
 y `gcloud run deploy` en `us-central1`. Autenticacion por OIDC (Workload
-Identity), igual que el backend.
+Identity) con provider y service account propios del frontend
+(`github-frontend-provider` / `github-actions-frontend@`), separados de los del
+backend.
 
 `VITE_API_URL` y `VITE_API_KEY` se inyectan como build args porque Vite las
 incrusta en el bundle; configurarlas en el repo de GitHub como variable
