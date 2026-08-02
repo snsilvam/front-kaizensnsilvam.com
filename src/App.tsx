@@ -1,16 +1,13 @@
 import { Home } from './pages/Home';
 import { Sebas } from './pages/Sebas';
-
-function currentPage() {
-  if (window.location.pathname === '/sebas') return <Sebas />;
-  return <Home />;
-}
+import { AppLayout } from './components/AppLayout';
 
 export default function App() {
+  const currentPath = window.location.pathname;
+
   return (
-    <main className="app">
-      <h1>Kaizen</h1>
-      {currentPage()}
-    </main>
+    <AppLayout currentPath={currentPath}>
+      {currentPath === '/sebas' ? <Sebas /> : <Home />}
+    </AppLayout>
   );
 }

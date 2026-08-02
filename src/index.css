@@ -1,6 +1,8 @@
 :root {
-  font-family: system-ui, sans-serif;
-  color-scheme: light dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #24362f;
+  background: #f4f7f2;
+  font-synthesis: none;
 }
 
 * {
@@ -9,51 +11,162 @@
 
 body {
   margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
 }
 
-.app {
-  max-width: 720px;
+.app-shell {
+  width: min(100% - 32px, 1120px);
+  min-height: 100vh;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #dce5d9;
+}
+
+.brand {
+  color: #193b2b;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: #1f6a4b;
+  border-radius: 10px 10px 10px 2px;
+  font-family: Georgia, serif;
+  font-size: 1.1rem;
+}
+
+.main-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-link {
+  padding: 8px 12px;
+  color: #62736a;
+  border-radius: 8px;
+  font-size: .9rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.nav-link:hover, .nav-link-active {
+  color: #1f6a4b;
+  background: #e7f1e9;
+}
+
+.app-content {
+  flex: 1;
+  padding: 64px 0 48px;
+}
+
+.app-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0 28px;
+  color: #78867f;
+  border-top: 1px solid #dce5d9;
+  font-size: .8rem;
+}
+
+.page-intro {
+  max-width: 590px;
+  margin-bottom: 36px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: #2e815a;
+  font-size: .76rem;
+  font-weight: 750;
+  letter-spacing: .1em;
+  text-transform: uppercase;
 }
 
 h1 {
-  font-size: 1.5rem;
-  margin: 0 0 24px;
+  margin: 0;
+  color: #193b2b;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  letter-spacing: -0.055em;
+  line-height: 1.05;
+}
+
+.page-intro > p:last-child {
+  margin: 14px 0 0;
+  color: #62736a;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 h2 {
-  font-size: 1rem;
-  margin: 32px 0 12px;
+  margin: 0 0 14px;
+  color: #193b2b;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
 }
 
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
+  gap: 16px;
 }
 
 .card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 16px;
-  border: 1px solid #8884;
-  border-radius: 10px;
+  gap: 6px;
+  min-height: 136px;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid #dce5d9;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(31, 66, 46, .05);
 }
 
 .card-title {
-  font-size: 0.8rem;
-  opacity: 0.7;
+  color: #6b7b72;
+  font-size: .78rem;
+  font-weight: 650;
 }
 
 .card-value {
-  font-size: 1.25rem;
+  margin-top: auto;
+  color: #193b2b;
+  font-size: 1.4rem;
+  letter-spacing: -0.035em;
 }
 
 .card-detail {
-  font-size: 0.8rem;
-  opacity: 0.7;
+  color: #78867f;
+  font-size: .8rem;
+}
+
+.pending-section {
+  max-width: 720px;
+  margin-top: 44px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #dce5d9;
+  border-radius: 16px;
 }
 
 .pending-list {
@@ -67,17 +180,17 @@ h2 {
   justify-content: space-between;
   gap: 12px;
   padding: 12px 0;
-  border-bottom: 1px solid #8883;
+  border-bottom: 1px solid #e6ece3;
 }
 
 .pending-meta {
   font-size: 0.85rem;
-  opacity: 0.7;
+  color: #78867f;
   white-space: nowrap;
 }
 
 .state {
-  opacity: 0.8;
+  color: #62736a;
 }
 
 .state-error {
@@ -101,7 +214,7 @@ h2 {
   font: inherit;
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #8886;
+  border: 1px solid #cfdacf;
   border-radius: 8px;
   background: transparent;
   color: inherit;
@@ -110,9 +223,19 @@ h2 {
 button {
   font: inherit;
   padding: 8px 14px;
-  border: 1px solid #8886;
+  border: 1px solid #1f6a4b;
   border-radius: 8px;
-  background: transparent;
-  color: inherit;
+  background: #1f6a4b;
+  color: #fff;
   cursor: pointer;
+}
+
+button:hover { background: #19563d; }
+
+@media (max-width: 600px) {
+  .app-shell { width: min(100% - 24px, 1120px); }
+  .app-header { min-height: 68px; }
+  .app-content { padding: 42px 0 36px; }
+  .app-footer { padding-bottom: 20px; }
+  .pending-section { padding: 20px; margin-top: 32px; }
 }
