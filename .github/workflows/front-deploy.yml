@@ -52,10 +52,12 @@ jobs:
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
+          VITE_SEBAS_KEY: ${{ secrets.VITE_SEBAS_KEY }}
         run: |
           docker build \
             --build-arg "VITE_API_URL=$VITE_API_URL" \
             --build-arg "VITE_API_KEY=$VITE_API_KEY" \
+            --build-arg "VITE_SEBAS_KEY=$VITE_SEBAS_KEY" \
             -t us-central1-docker.pkg.dev/kaizensnsilvam/frontend/kaizensnsilvam-frontend:latest .
 
       - name: Push Docker image
