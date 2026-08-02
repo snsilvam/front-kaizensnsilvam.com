@@ -49,10 +49,13 @@ jobs:
           gcloud auth configure-docker us-central1-docker.pkg.dev
 
       - name: Build Docker image
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
         run: |
           docker build \
-            --build-arg VITE_API_URL=${{ vars.VITE_API_URL }} \
-            --build-arg VITE_API_KEY=${{ secrets.VITE_API_KEY }} \
+            --build-arg "VITE_API_URL=$VITE_API_URL" \
+            --build-arg "VITE_API_KEY=$VITE_API_KEY" \
             -t us-central1-docker.pkg.dev/kaizensnsilvam/frontend/kaizensnsilvam-frontend:latest .
 
       - name: Push Docker image
