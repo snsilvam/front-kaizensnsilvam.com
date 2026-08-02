@@ -17,7 +17,7 @@ Scripts: `npm run dev`, `npm run build`, `npm run preview`, `npm run typecheck`.
 
 Push a `main` dispara `.github/workflows/deploy.yml`: typecheck, build de la
 imagen Docker (Vite → nginx en el puerto 8080), push a Artifact Registry
-(`us-central1-docker.pkg.dev/kaizensnsilvam/containers/kaizensnsilvam-frontend`)
+(`us-central1-docker.pkg.dev/kaizensnsilvam/frontend/kaizensnsilvam-frontend`)
 y `gcloud run deploy` en `us-central1`. Autenticacion por OIDC (Workload
 Identity) con provider y service account propios del frontend
 (`github-frontend-provider` / `github-actions-frontend@`), separados de los del

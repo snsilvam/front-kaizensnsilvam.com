@@ -53,16 +53,16 @@ jobs:
           docker build \
             --build-arg VITE_API_URL=${{ vars.VITE_API_URL }} \
             --build-arg VITE_API_KEY=${{ secrets.VITE_API_KEY }} \
-            -t us-central1-docker.pkg.dev/kaizensnsilvam/containers/kaizensnsilvam-frontend:latest .
+            -t us-central1-docker.pkg.dev/kaizensnsilvam/frontend/kaizensnsilvam-frontend:latest .
 
       - name: Push Docker image
         run: |
-          docker push us-central1-docker.pkg.dev/kaizensnsilvam/containers/kaizensnsilvam-frontend:latest
+          docker push us-central1-docker.pkg.dev/kaizensnsilvam/frontend/kaizensnsilvam-frontend:latest
 
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy kaizensnsilvam-frontend \
-            --image us-central1-docker.pkg.dev/kaizensnsilvam/containers/kaizensnsilvam-frontend:latest \
+            --image us-central1-docker.pkg.dev/kaizensnsilvam/frontend/kaizensnsilvam-frontend:latest \
             --region us-central1 \
             --platform managed \
             --allow-unauthenticated \
