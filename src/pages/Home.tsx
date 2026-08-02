@@ -14,6 +14,12 @@ export function Home() {
 
   return (
     <>
+      <section className="page-intro" aria-labelledby="dashboard-title">
+        <p className="eyebrow">Tu panorama de hoy</p>
+        <h1 id="dashboard-title">Resumen financiero</h1>
+        <p>Decide con claridad qu\u00e9 puedes gastar y mant\u00e9n el control de tu plan.</p>
+      </section>
+
       <section className="cards">
         <Card
           title="Dinero disponible"
@@ -38,7 +44,7 @@ export function Home() {
         <Card title="Pendientes" value={String(data.pending.length)} />
       </section>
 
-      <section>
+      <section className="pending-section">
         <h2>Pendientes</h2>
         <PendingList items={data.pending} currency={data.currency} />
       </section>
