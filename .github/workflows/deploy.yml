@@ -1,0 +1,69 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: kaizensnsilvam
+  REGION: us-central1
+  SERVICE: kaizensnsilvam-frontend
+  IMAGE: kaizensnsilvam-frontend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write # 🔑 OIDC obligatorio
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Authenticate to GCP (OIDC)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/778334880592/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-actions-cloud-run@kaizensnsilvam.iam.gserviceaccount.com
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg VITE_API_URL=${{ vars.VITE_API_URL }} \
+            --build-arg VITE_API_KEY=${{ secrets.VITE_API_KEY }} \
+            -t us-central1-docker.pkg.dev/kaizensnsilvam/containers/kaizensnsilvam-frontend:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push us-central1-docker.pkg.dev/kaizensnsilvam/containers/kaizensnsilvam-frontend:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy kaizensnsilvam-frontend \
+            --image us-central1-docker.pkg.dev/kaizensnsilvam/containers/kaizensnsilvam-frontend:latest \
+            --region us-central1 \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080
