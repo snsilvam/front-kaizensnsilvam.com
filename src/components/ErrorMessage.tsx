@@ -1,3 +1,6 @@
+import { Alert, AlertAction, AlertDescription, AlertTitle } from './ui/alert';
+import { Button } from './ui/button';
+
 interface ErrorMessageProps {
   message: string;
   onRetry?: () => void;
@@ -5,13 +8,16 @@ interface ErrorMessageProps {
 
 export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
   return (
-    <div className="state state-error">
-      <p>{message}</p>
+    <Alert variant="destructive" className="max-w-xl">
+      <AlertTitle>No pudimos cargar tu resumen</AlertTitle>
+      <AlertDescription>{message}</AlertDescription>
       {onRetry && (
-        <button type="button" onClick={onRetry}>
-          Reintentar
-        </button>
+        <AlertAction>
+          <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            Reintentar
+          </Button>
+        </AlertAction>
       )}
-    </div>
+    </Alert>
   );
 }

@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 
-/**
- * OJO: al ser una app de navegador, esta clave queda visible en el bundle.
- * Sirve para reservar la ruta, no como seguridad real.
- */
 const SEBAS_KEY = import.meta.env.VITE_SEBAS_KEY ?? '';
 
 export function Sebas() {
@@ -11,7 +12,7 @@ export function Sebas() {
 
   if (!unlocked) return <KeyForm onUnlock={() => setUnlocked(true)} />;
 
-  return <p>Te amo hermanito♥</p>;
+  return <p className="text-lg font-medium">Te amo hermanito♥</p>;
 }
 
 function KeyForm({ onUnlock }: { onUnlock: () => void }) {
@@ -36,17 +37,31 @@ function KeyForm({ onUnlock }: { onUnlock: () => void }) {
   }
 
   return (
-    <form className="key-form" onSubmit={submit}>
-      <label htmlFor="sebas-key">Clave</label>
-      <input
-        id="sebas-key"
-        type="password"
-        value={key}
-        onChange={(event) => setKey(event.target.value)}
-        autoComplete="off"
-      />
-      <button type="submit">Entrar</button>
-      {error && <p className="state state-error">{error}</p>}
-    </form>
+    <Card className="max-w-sm">
+      <CardHeader>
+        <CardTitle>Área privada</CardTitle>
+        <CardDescription>Ingresa la clave para continuar.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="flex flex-col gap-4" onSubmit={submit}>
+          <div className="grid gap-2">
+            <Label htmlFor="sebas-key">Clave</Label>
+            <Input
+              id="sebas-key"
+              type="password"
+              value={key}
+              onChange={(event) => setKey(event.target.value)}
+              autoComplete="off"
+            />
+          </div>
+          <Button type="submit">Entrar</Button>
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+        </form>
+      </CardContent>
+    </Card>
   );
 }
