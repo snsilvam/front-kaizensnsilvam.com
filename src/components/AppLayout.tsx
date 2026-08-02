@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useAuth } from '../auth/useAuth';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -7,6 +8,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, currentPath }: AppLayoutProps) {
   const isDashboard = currentPath === '/';
+  const { user, signOut } = useAuth();
 
   return (
     <div className="app-shell">
@@ -20,6 +22,11 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
           <a className={isDashboard ? 'nav-link nav-link-active' : 'nav-link'} href="/">
             Resumen
           </a>
+
+          {user && <span className="nav-link">{user.displayName ?? user.email}</span>}
+          <button type="button" onClick={signOut}>
+            Salir
+          </button>
         </nav>
       </header>
 
