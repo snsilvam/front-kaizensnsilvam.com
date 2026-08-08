@@ -34,11 +34,11 @@ jobs:
 
       - name: Debug TypeScript
         run: |
-        node --version
-        npm --version
-        npm ls typescript
-        npm ls @typescript/typescript-linux-x64
-        ls -la node_modules/@typescript/
+          node --version
+          npm --version
+          npm ls typescript
+          npm ls @typescript/typescript-linux-x64
+          ls -la node_modules/@typescript/
 
       - name: Typecheck
         run: npm run typecheck
