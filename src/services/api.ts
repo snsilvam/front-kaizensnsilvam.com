@@ -18,12 +18,16 @@ export class ApiError extends Error {
  * Unico punto de salida hacia el backend.
  * Siempre envia el header X-API-Key.
  */
-export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function request<T>(
+  path: string,
+  init: RequestInit = {},
+  includeApiKey = true,
+): Promise<T> {
   const response = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Key': API_KEY,
+      ...(includeApiKey ? { 'X-API-Key': API_KEY } : {}),
       ...init.headers,
     },
   });

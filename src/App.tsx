@@ -1,4 +1,5 @@
 import { Home } from './pages/Home';
+import { RegisterIncome } from './pages/RegisterIncome';
 import { Sebas } from './pages/Sebas';
 import { AppLayout } from './components/AppLayout';
 
@@ -7,7 +8,7 @@ export default function App() {
 
   return (
     <AppLayout currentPath={currentPath}>
-      {currentPath === '/sebas' ? <Sebas /> : <Home />}
+      {currentPath === '/sebas' ? <Sebas /> : currentPath === '/ingresos' ? <RegisterIncome /> : <Home />}
     </AppLayout>
   );
 }
