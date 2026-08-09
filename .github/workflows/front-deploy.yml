@@ -32,6 +32,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug TypeScript
+        run: |
+          node --version
+          npm --version
+          npm ls typescript
+          npm ls @typescript/typescript-linux-x64
+          ls -la node_modules/@typescript/
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -53,11 +61,19 @@ jobs:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
           VITE_SEBAS_KEY: ${{ secrets.VITE_SEBAS_KEY }}
+          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
         run: |
           docker build \
             --build-arg "VITE_API_URL=$VITE_API_URL" \
             --build-arg "VITE_API_KEY=$VITE_API_KEY" \
             --build-arg "VITE_SEBAS_KEY=$VITE_SEBAS_KEY" \
+            --build-arg "VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY" \
+            --build-arg "VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN" \
+            --build-arg "VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID" \
+            --build-arg "VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID" \
             -t us-central1-docker.pkg.dev/kaizensnsilvam/frontend/kaizensnsilvam-frontend:latest .
 
       - name: Push Docker image

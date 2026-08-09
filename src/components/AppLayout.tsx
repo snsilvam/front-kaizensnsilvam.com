@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Separator } from './ui/separator';
+import { useAuth } from '../auth/useAuth';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -8,6 +9,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, currentPath }: AppLayoutProps) {
   const isDashboard = currentPath === '/';
+  const { user, signOut } = useAuth();
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 sm:px-6">
@@ -34,6 +36,11 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
           >
             Resumen
           </a>
+
+          {user && <span className="nav-link">{user.displayName ?? user.email}</span>}
+          <button type="button" onClick={signOut}>
+            Salir
+          </button>
         </nav>
       </header>
 

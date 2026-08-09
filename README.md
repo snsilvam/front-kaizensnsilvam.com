@@ -1,15 +1,19 @@
 # Kaizen — Frontend
 
 React + TypeScript + Vite. Consume unicamente la API REST del backend Go.
-Sin autenticacion, sin Redux, sin router: solo el Home.
+Autenticacion con Firebase Authentication (Google). Sin Redux, sin router.
 
 ## Puesta en marcha
 
 ```bash
 npm install
-cp .env.example .env   # completar VITE_API_URL y VITE_API_KEY
+cp .env.example .env   # completar VITE_API_URL, VITE_API_KEY y VITE_FIREBASE_*
 npm run dev
 ```
+
+Requisitos en Firebase Console: habilitar **Google** en Authentication ->
+Sign-in method y agregar el dominio del frontend en **Authorized domains**
+(`localhost` ya viene incluido).
 
 Scripts: `npm run dev`, `npm run build`, `npm run preview`, `npm run typecheck`.
 
@@ -27,12 +31,17 @@ backend.
 incrusta en el bundle; configurarlas en el repo de GitHub como variable
 (`vars.VITE_API_URL`) y secreto (`secrets.VITE_API_KEY`).
 
+Las cuatro `VITE_FIREBASE_*` tambien van como build args, configuradas como
+variables del repo (`vars.VITE_FIREBASE_*`). No son secretos: la config web de
+Firebase es publica por diseno.
+
 ## Estructura
 
 ```
 src/
-  components/   Card, Loading, ErrorMessage, PendingList
-  pages/        Home.tsx
+  auth/         capa de autenticacion (ver mas abajo)
+  components/   Card, Loading, ErrorMessage, PendingList, AppLayout
+  pages/        Home.tsx, Login.tsx, Sebas.tsx
   services/     api.ts (fetch + header X-API-Key), dashboard.ts, format.ts
   hooks/        useDashboard.ts
   types/        dashboard.ts, api.ts
@@ -41,6 +50,33 @@ src/
 
 Toda salida a red pasa por `services/api.ts`, que agrega el header
 `X-API-Key` (valor de `VITE_API_KEY`) en cada peticion.
+
+## Autenticacion
+
+```
+src/auth/
+  firebase.ts        unico archivo que importa el SDK de Firebase
+  AuthContext.tsx    tipos AuthUser / AuthState + createContext
+  AuthProvider.tsx   listener onAuthStateChanged
+  useAuth.ts         hook de acceso al contexto
+  ProtectedRoute.tsx guard: Loading -> Login -> contenido
+```
+
+`main.tsx` envuelve la app en `<AuthProvider><ProtectedRoute><App /></...>`, asi
+que todo el frontend queda detras del login. El estado viene solo de
+`onAuthStateChanged()`; Firebase persiste la sesion, no se guarda nada en
+LocalStorage.
+
+Los componentes de negocio nunca importan Firebase: usan `useAuth()`, que
+devuelve `{ user, loading, signIn, signOut, getIdToken }` con un `AuthUser`
+propio (`uid`, `email`, `displayName`).
+
+Para proteger solo una parte de la UI, envolver ese bloque en
+`<ProtectedRoute>` en lugar de `App` completo.
+
+El backend sigue autenticando con `X-API-Key`. Cuando valide Firebase ID
+Tokens, el cambio se limita a `services/api.ts`: usar `getIdToken()` del
+contexto y enviarlo como `Authorization: Bearer <token>`.
 
 > Nota: al ser una app de navegador, `VITE_API_KEY` queda incrustada en el
 > bundle y es visible para cualquiera. Sirve como clave de aplicacion frente
