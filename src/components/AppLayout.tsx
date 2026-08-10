@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import KaizenLogo from './KaizenLogo';
 import { Separator } from './ui/separator';
 import { useAuth } from '../auth/useAuth';
 
@@ -20,9 +21,12 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
           href="/"
           aria-label="Kaizen, ir al inicio"
         >
-          <span className="grid size-8 place-items-center rounded-[10px_10px_10px_2px] bg-primary font-serif text-lg text-primary-foreground" aria-hidden="true">
-            K
-          </span>
+          <KaizenLogo
+            width={58}
+            height={58}
+            className="size-14 shrink-0 rounded-2xl object-cover shadow-md shadow-primary/20"
+            alt="Pastor, mascota de Kaizen"
+          />
           <span>Kaizen</span>
         </a>
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
+import KaizenLogo from '../components/KaizenLogo';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -29,11 +30,16 @@ export function Login() {
 
       <main className="relative w-full max-w-md" aria-labelledby="login-title">
         <div className="mb-6 flex justify-center">
-          <div className="grid size-12 place-items-center rounded-[14px_14px_14px_3px] bg-primary font-serif text-2xl font-bold text-primary-foreground shadow-lg shadow-primary/20">
-            K
-          </div>
+          <KaizenLogo
+            width={64}
+            height={64}
+            className="size-16 rounded-2xl object-cover shadow-lg shadow-primary/20"
+            alt="Pastor, mascota de Kaizen"
+            
+          />
+        
         </div>
-
+ 
         <Card className="border-[#dce5d9] py-7 shadow-[0_18px_50px_rgba(31,66,46,0.10)] sm:py-8">
           <CardHeader className="px-6 text-center sm:px-8">
             <p className="mb-2 text-xs font-bold tracking-[0.1em] text-primary uppercase">Bienvenido a Kaizen</p>
