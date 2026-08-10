@@ -66,8 +66,8 @@ export function Home() {
       </Card>
 
     <div className="mt-14 flex justify-center">
-      <Button>
-      Crear un gasto +
+      <Button type="button" onClick={() => { window.location.href = '/gastos'; }}>
+        Crear un gasto +
       </Button>
     </div>
     </>

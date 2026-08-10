@@ -26,7 +26,7 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
           <span>Kaizen</span>
         </a>
 
-        <nav className="flex gap-2" aria-label="Navegación principal">
+        <nav className="flex flex-wrap items-center justify-end gap-2 sm:gap-3" aria-label="Navegación principal">
           <a
             className={`rounded-md px-3 py-2 text-sm font-semibold no-underline transition-colors ${
               isDashboard
@@ -49,7 +49,7 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
           </a>
 
           {user && <span className="nav-link">{user.displayName ?? user.email}</span>}
-          <button type="button" onClick={signOut}>
+          <button type="button" className="ml-1"  onClick={signOut}>
             Salir
           </button>
         </nav>

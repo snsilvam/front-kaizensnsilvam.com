@@ -39,6 +39,23 @@ export async function request<T>(
   return (await response.json()) as T;
 }
 
+/** Solicitud a un endpoint publico cuya URL no depende de variables de entorno. */
+export async function publicRequest<T>(url: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetch(url, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...init.headers,
+    },
+  });
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorMessage(response), response.status);
+  }
+
+  return (await response.json()) as T;
+}
+
 async function readErrorMessage(response: Response): Promise<string> {
   try {
     const body = (await response.json()) as Partial<ApiErrorResponse>;
