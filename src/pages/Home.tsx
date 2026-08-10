@@ -10,10 +10,32 @@ import { Loading } from '../components/Loading';
 import { PendingList } from '../components/PendingList';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatDate, formatMoney, planStatusLabel } from '../services/format';
+import { markPendingPaymentAsPaid } from '../services/pendingPayments';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 export function Home() {
   const { data, loading, error, reload } = useDashboard();
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  const handleMarkAsPaid = async (paymentId: string) => {
+    setPayingId(paymentId);
+    setPaymentError(null);
+
+    try {
+      await markPendingPaymentAsPaid(paymentId);
+      reload();
+    } catch (requestError) {
+      setPaymentError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'No fue posible marcar el gasto como pagado.',
+      );
+    } finally {
+      setPayingId(null);
+    }
+  };
 
   if (loading) return <Loading />;
   if (error) return <ErrorMessage message={error} onRetry={reload} />;
@@ -61,7 +83,13 @@ export function Home() {
           <CardDescription>Pagos que debes tener presentes.</CardDescription>
         </CardHeader>
         <CardContent>
-          <PendingList items={data.pending} currency={data.currency} />
+          {paymentError && <p className="mb-3 text-sm text-destructive">{paymentError}</p>}
+          <PendingList
+            items={data.pending}
+            currency={data.currency}
+            payingId={payingId}
+            onMarkAsPaid={handleMarkAsPaid}
+          />
         </CardContent>
       </Card>
 
