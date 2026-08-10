@@ -15,3 +15,11 @@ export function registerPendingPayment(input: RegisterPendingPaymentInput): Prom
     body: JSON.stringify(input),
   });
 }
+
+/** PATCH /pending-payments/:id/mark-as-paid. */
+export function markPendingPaymentAsPaid(paymentId: string): Promise<unknown> {
+  return publicRequest<unknown>(
+    `${PENDING_PAYMENTS_URL}/${encodeURIComponent(paymentId)}/mark-as-paid`,
+    { method: 'PATCH' },
+  );
+}
