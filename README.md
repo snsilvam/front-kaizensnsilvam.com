@@ -112,5 +112,6 @@ en `src/types/dashboard.ts`:
 Si el backend define otros nombres de campo, ajustar solo
 `src/types/dashboard.ts` (y el mapeo en `services/dashboard.ts` si hace falta).
 
-No hay datos falsos ni mocks: mientras el endpoint no exista, el Home muestra
-el estado de error con boton de reintentar.
+Actualmente el Home usa siempre los datos temporales de `src/services/mock.ts`.
+Cuando el endpoint `GET /dashboard` este listo, `services/dashboard.ts` se
+actualizara para consumirlo.
