@@ -1,3 +1,4 @@
+import { getIdToken } from '../auth/firebase';
 import type { ApiErrorResponse } from '../types/api';
 
 const BASE_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
@@ -16,7 +17,7 @@ export class ApiError extends Error {
 
 /**
  * Unico punto de salida hacia el backend.
- * Siempre envia el header X-API-Key.
+ * Siempre envia el header X-API-Key y el ID Token de la sesion de Firebase.
  */
 export async function request<T>(
   path: string,
@@ -28,6 +29,7 @@ export async function request<T>(
     headers: {
       'Content-Type': 'application/json',
       ...(includeApiKey ? { 'X-API-Key': API_KEY } : {}),
+      ...(await authorizationHeader()),
       ...init.headers,
     },
   });
@@ -45,6 +47,7 @@ export async function publicRequest<T>(url: string, init: RequestInit = {}): Pro
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...(await authorizationHeader()),
       ...init.headers,
     },
   });
@@ -54,6 +57,12 @@ export async function publicRequest<T>(url: string, init: RequestInit = {}): Pro
   }
 
   return (await response.json()) as T;
+}
+
+/** `Authorization: Bearer <ID_TOKEN>`; vacio si no hay sesion activa. */
+async function authorizationHeader(): Promise<Record<string, string>> {
+  const token = await getIdToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 async function readErrorMessage(response: Response): Promise<string> {

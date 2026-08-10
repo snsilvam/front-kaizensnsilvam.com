@@ -49,7 +49,8 @@ src/
 ```
 
 Toda salida a red pasa por `services/api.ts`, que agrega el header
-`X-API-Key` (valor de `VITE_API_KEY`) en cada peticion.
+`X-API-Key` (valor de `VITE_API_KEY`) y el header
+`Authorization: Bearer <ID_TOKEN>` en cada peticion.
 
 ## Autenticacion
 
@@ -74,9 +75,9 @@ propio (`uid`, `email`, `displayName`).
 Para proteger solo una parte de la UI, envolver ese bloque en
 `<ProtectedRoute>` en lugar de `App` completo.
 
-El backend sigue autenticando con `X-API-Key`. Cuando valide Firebase ID
-Tokens, el cambio se limita a `services/api.ts`: usar `getIdToken()` del
-contexto y enviarlo como `Authorization: Bearer <token>`.
+Ademas de `X-API-Key`, `services/api.ts` envia el ID Token de la sesion como
+`Authorization: Bearer <token>`, usando el mismo `getIdToken()` que el contexto
+expone en `useAuth()`. Si no hay sesion, el header simplemente no se envia.
 
 > Nota: al ser una app de navegador, `VITE_API_KEY` queda incrustada en el
 > bundle y es visible para cualquiera. Sirve como clave de aplicacion frente
