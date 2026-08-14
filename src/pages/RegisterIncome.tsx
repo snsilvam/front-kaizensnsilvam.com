@@ -4,7 +4,12 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { registerIncome } from '../services/incomes';
+import { Skeleton } from '../components/ui/skeleton';
+import { IncomeTable } from '../components/IncomeTable';
+import { useIncomes } from '../hooks/useIncomes';
+import { deleteIncome, registerIncome } from '../services/incomes';
+
+const CURRENCY = 'COP';
 
 export function RegisterIncome() {
   const [name, setName] = useState('');
@@ -13,6 +18,27 @@ export function RegisterIncome() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const incomes = useIncomes();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+
+  async function remove(incomeId: string) {
+    if (!window.confirm('¿Eliminar este ingreso?')) return;
+
+    setDeletingId(incomeId);
+    setDeleteError('');
+
+    try {
+      await deleteIncome(incomeId);
+      incomes.reload();
+    } catch (requestError) {
+      setDeleteError(
+        requestError instanceof Error ? requestError.message : 'No fue posible eliminar el ingreso.',
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,6 +68,7 @@ export function RegisterIncome() {
       setName('');
       setAmount('');
       setPaymentDate('');
+      incomes.reload();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'No fue posible registrar el ingreso.');
     } finally {
@@ -119,6 +146,39 @@ export function RegisterIncome() {
               {isSubmitting ? 'Guardando...' : 'Registrar ingreso'}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Tus ingresos</CardTitle>
+          <CardDescription>Ingresos que has registrado.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {incomes.loading ? (
+            <div className="space-y-3" aria-busy="true" aria-label="Cargando ingresos">
+              {[0, 1, 2].map((row) => (
+                <Skeleton key={row} className="h-6 w-full" />
+              ))}
+            </div>
+          ) : incomes.error ? (
+            <div className="flex flex-col items-start gap-3">
+              <p className="text-sm text-destructive">{incomes.error}</p>
+              <Button type="button" variant="outline" size="sm" onClick={incomes.reload}>
+                Reintentar
+              </Button>
+            </div>
+          ) : (
+            <>
+              {deleteError && <p className="mb-3 text-sm text-destructive">{deleteError}</p>}
+              <IncomeTable
+                items={incomes.data ?? []}
+                currency={CURRENCY}
+                deletingId={deletingId}
+                onDelete={remove}
+              />
+            </>
+          )}
         </CardContent>
       </Card>
     </section>

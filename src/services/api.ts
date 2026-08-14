@@ -38,7 +38,7 @@ export async function request<T>(
     throw new ApiError(await readErrorMessage(response), response.status);
   }
 
-  return (await response.json()) as T;
+  return (await readBody<T>(response)) as T;
 }
 
 /** Solicitud a un endpoint publico cuya URL no depende de variables de entorno. */
