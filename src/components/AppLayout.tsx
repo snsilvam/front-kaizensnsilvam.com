@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
+import { LogOut } from 'lucide-react';
 import KaizenLogo from './KaizenLogo';
+import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { useAuth } from '../auth/useAuth';
 
@@ -9,7 +11,6 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, currentPath }: AppLayoutProps) {
-  const isDashboard = currentPath === '/';
   const isIncomePage = currentPath === '/ingresos';
   const { user, signOut } = useAuth();
 
@@ -33,16 +34,6 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
         <nav className="flex flex-wrap items-center justify-end gap-2 sm:gap-3" aria-label="Navegación principal">
           <a
             className={`rounded-md px-3 py-2 text-sm font-semibold no-underline transition-colors ${
-              isDashboard
-                ? 'bg-accent text-primary'
-                : 'text-muted-foreground hover:bg-muted hover:text-primary'
-            }`}
-            href="/"
-          >
-            Resumen
-          </a>
-          <a
-            className={`rounded-md px-3 py-2 text-sm font-semibold no-underline transition-colors ${
               isIncomePage
                 ? 'bg-accent text-primary'
                 : 'text-muted-foreground hover:bg-muted hover:text-primary'
@@ -52,10 +43,23 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
             Ingresos
           </a>
 
-          {user && <span className="nav-link">{user.displayName ?? user.email}</span>}
-          <button type="button" className="ml-1"  onClick={signOut}>
-            Salir
-          </button>
+          {user && (
+            <span className="max-w-40 truncate text-sm text-muted-foreground">
+              {user.displayName ?? user.email}
+            </span>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="ml-1 text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
+            onClick={signOut}
+          >
+            <LogOut aria-hidden="true" />
+            <span className="hidden sm:inline">Cerrar sesión</span>
+          </Button>
         </nav>
       </header>
 
