@@ -23,3 +23,10 @@ export function markPendingPaymentAsPaid(paymentId: string): Promise<unknown> {
     { method: 'PATCH' },
   );
 }
+
+/** DELETE /pending-payments/:id. */
+export function deletePendingPayment(paymentId: string): Promise<unknown> {
+  return publicRequest<unknown>(`${PENDING_PAYMENTS_URL}/${encodeURIComponent(paymentId)}`, {
+    method: 'DELETE',
+  });
+}

@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Trash2 } from 'lucide-react';
 import { formatDate, formatMoney } from '../services/format';
 import type { PendingItem } from '../types/dashboard';
 import { Button } from './ui/button';
@@ -9,10 +9,19 @@ interface PendingListProps {
   items: PendingItem[];
   currency: string;
   payingId?: string | null;
+  deletingId?: string | null;
   onMarkAsPaid?: (paymentId: string) => void;
+  onDelete?: (paymentId: string) => void;
 }
 
-export function PendingList({ items, currency, payingId, onMarkAsPaid }: PendingListProps) {
+export function PendingList({
+  items,
+  currency,
+  payingId,
+  deletingId,
+  onMarkAsPaid,
+  onDelete,
+}: PendingListProps) {
   if (items.length === 0) {
     return <p className="text-sm text-muted-foreground">Sin pendientes.</p>;
   }
@@ -39,6 +48,19 @@ export function PendingList({ items, currency, payingId, onMarkAsPaid }: Pending
                   onClick={() => onMarkAsPaid(item.id)}
                 >
                   <Check aria-hidden="true" />
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon-sm"
+                  aria-label={`Eliminar ${item.title}`}
+                  title="Eliminar"
+                  disabled={deletingId === item.id}
+                  onClick={() => onDelete(item.id)}
+                >
+                  <Trash2 aria-hidden="true" />
                 </Button>
               )}
             </span>

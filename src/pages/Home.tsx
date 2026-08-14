@@ -10,13 +10,14 @@ import { Loading } from '../components/Loading';
 import { PendingList } from '../components/PendingList';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatDate, formatMoney, planStatusLabel } from '../services/format';
-import { markPendingPaymentAsPaid } from '../services/pendingPayments';
+import { deletePendingPayment, markPendingPaymentAsPaid } from '../services/pendingPayments';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
 export function Home() {
   const { data, loading, error, reload } = useDashboard();
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const handleMarkAsPaid = async (paymentId: string) => {
@@ -34,6 +35,26 @@ export function Home() {
       );
     } finally {
       setPayingId(null);
+    }
+  };
+
+  const handleDelete = async (paymentId: string) => {
+    if (!window.confirm('¿Eliminar este gasto pendiente?')) return;
+
+    setDeletingId(paymentId);
+    setPaymentError(null);
+
+    try {
+      await deletePendingPayment(paymentId);
+      reload();
+    } catch (requestError) {
+      setPaymentError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'No fue posible eliminar el gasto pendiente.',
+      );
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -88,7 +109,9 @@ export function Home() {
             items={data.pending}
             currency={data.currency}
             payingId={payingId}
+            deletingId={deletingId}
             onMarkAsPaid={handleMarkAsPaid}
+            onDelete={handleDelete}
           />
         </CardContent>
       </Card>
