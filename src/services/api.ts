@@ -56,7 +56,15 @@ export async function publicRequest<T>(url: string, init: RequestInit = {}): Pro
     throw new ApiError(await readErrorMessage(response), response.status);
   }
 
-  return (await response.json()) as T;
+  return (await readBody<T>(response)) as T;
+}
+
+/** Respuestas sin contenido (204) no traen JSON que parsear. */
+async function readBody<T>(response: Response): Promise<T | null> {
+  if (response.status === 204) return null;
+
+  const text = await response.text();
+  return text ? (JSON.parse(text) as T) : null;
 }
 
 /** `Authorization: Bearer <ID_TOKEN>`; vacio si no hay sesion activa. */
