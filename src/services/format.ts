@@ -25,3 +25,19 @@ const PLAN_STATUS_LABELS: Record<PlanStatus, string> = {
 export function planStatusLabel(status: PlanStatus): string {
   return PLAN_STATUS_LABELS[status] ?? PLAN_STATUS_LABELS.unknown;
 }
+
+/**
+ * "07:30" -> "7 horas 30 minutos". Las horas dormidas llegan del backend con el
+ * mismo formato "HH:MM" que las horas del reloj, pero son una duración.
+ */
+export function formatSleepDuration(hhmm: string): string {
+  const [rawHours, rawMinutes] = hhmm.split(':');
+  const hours = Number(rawHours);
+  const minutes = Number(rawMinutes);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return hhmm;
+
+  const parts: string[] = [];
+  if (hours > 0) parts.push(`${hours} ${hours === 1 ? 'hora' : 'horas'}`);
+  if (minutes > 0) parts.push(`${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`);
+  return parts.length > 0 ? parts.join(' ') : 'Sin registrar';
+}
