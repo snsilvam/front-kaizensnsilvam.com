@@ -44,10 +44,10 @@ export function Login() {
           <CardHeader className="px-6 text-center sm:px-8">
             <p className="mb-2 text-xs font-bold tracking-[0.1em] text-primary uppercase">Bienvenido a Kaizen</p>
             <CardTitle id="login-title" className="text-2xl font-bold tracking-[-0.04em] sm:text-3xl">
-              Tus finanzas, con calma
+               Bienestar financiero y hábitos
             </CardTitle>
             <CardDescription className="mx-auto mt-2 max-w-sm leading-relaxed">
-              Ingresa con tu cuenta de Google para consultar tu resumen financiero.
+              Ingresa con tu cuenta de Google para organizar tus finanzas y seguir construyendo hábitos que te acerquen a tus metas.
             </CardDescription>
           </CardHeader>
 
@@ -68,7 +68,7 @@ export function Login() {
         </Card>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Una forma simple de tomar mejores decisiones con tu dinero.
+          Una forma simple de tomar mejores decisiones con tu vida.
         </p>
       </main>
     </div>
