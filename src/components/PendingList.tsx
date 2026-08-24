@@ -49,7 +49,8 @@ export function PendingList({
                 >
                   <Check aria-hidden="true" />
                 </Button>
-              )}
+              )}  
+   
               {onDelete && (
                 <Button
                   type="button"
@@ -63,6 +64,7 @@ export function PendingList({
                   <Trash2 aria-hidden="true" />
                 </Button>
               )}
+            
             </span>
           </li>
           {index < items.length - 1 && <Separator />}

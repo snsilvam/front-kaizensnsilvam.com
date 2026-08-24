@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Skeleton } from '../components/ui/skeleton';
 import { IncomeTable } from '../components/IncomeTable';
+import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { useIncomes } from '../hooks/useIncomes';
 import { deleteIncome, registerIncome } from '../services/incomes';
 
@@ -20,11 +21,10 @@ export function RegisterIncome() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const incomes = useIncomes();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState('');
 
   async function remove(incomeId: string) {
-    if (!window.confirm('¿Eliminar este ingreso?')) return;
-
     setDeletingId(incomeId);
     setDeleteError('');
 
@@ -175,12 +175,25 @@ export function RegisterIncome() {
                 items={incomes.data ?? []}
                 currency={CURRENCY}
                 deletingId={deletingId}
-                onDelete={remove}
+                onDelete={setIncomeToDelete}
               />
             </>
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDeleteDialog
+        open={incomeToDelete !== null}
+        itemName={incomes.data?.find((income) => income.id === incomeToDelete)?.name ?? 'este ingreso'}
+        itemType="ingreso"
+        isDeleting={deletingId === incomeToDelete}
+        onCancel={() => setIncomeToDelete(null)}
+        onConfirm={async () => {
+          if (!incomeToDelete) return;
+          await remove(incomeToDelete);
+          setIncomeToDelete(null);
+        }}
+      />
     </section>
   );
 }

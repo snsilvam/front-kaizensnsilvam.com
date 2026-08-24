@@ -12,7 +12,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, currentPath }: AppLayoutProps) {
   const isIncomePage = currentPath === '/ingresos';
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 sm:px-6">
@@ -43,11 +43,7 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
             Ingresos
           </a>
 
-          {user && (
-            <span className="max-w-40 truncate text-sm text-muted-foreground">
-              {user.displayName ?? user.email}
-            </span>
-          )}
+         
           <Button
             type="button"
             variant="outline"
