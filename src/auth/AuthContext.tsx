@@ -16,6 +16,8 @@ export interface AuthState {
   loading: boolean;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
+  needsAppSelection: boolean;
+  completeAppSelection: () => void;
   /** ID Token del usuario actual; null si no hay sesion. */
   getIdToken: () => Promise<string | null>;
 }

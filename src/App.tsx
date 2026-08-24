@@ -4,9 +4,12 @@ import { RegisterPendingPayment } from './pages/RegisterPendingPayment';
 import { RegisterHabit1 } from './pages/RegisterHabit1';
 import { Sebas } from './pages/Sebas';
 import { AppLayout } from './components/AppLayout';
+import { Habits } from './pages/Habits';
 
 export default function App() {
   const currentPath = window.location.pathname;
+
+  if (currentPath === '/habits') return <Habits />;
 
   return (
     <AppLayout currentPath={currentPath}>

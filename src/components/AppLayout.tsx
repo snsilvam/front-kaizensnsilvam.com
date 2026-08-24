@@ -12,7 +12,6 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, currentPath }: AppLayoutProps) {
   const isIncomePage = currentPath === '/ingresos';
-  const isHabit1Page = currentPath === '/habito-1';
   const { user, signOut } = useAuth();
 
   return (
