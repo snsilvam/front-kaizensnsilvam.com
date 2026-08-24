@@ -4,6 +4,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { DateTimePicker } from '../components/DateTimePicker';
 import { registerPendingPayment } from '../services/pendingPayments';
 
 export function RegisterPendingPayment() {
@@ -19,7 +20,7 @@ export function RegisterPendingPayment() {
     setError('');
     setSuccess('');
 
-    const numericAmount = Number(amount);
+    const numericAmount = Number(amount.replace(/\./g, ''));
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       setError('Ingresa un monto mayor que cero.');
       return;
@@ -61,7 +62,7 @@ export function RegisterPendingPayment() {
         </p>
       </div>
 
-      <Card>
+      <Card className="overflow-visible">
         <CardHeader>
           <CardTitle>Datos del gasto</CardTitle>
           <CardDescription>Completa la información para guardarla.</CardDescription>
@@ -83,24 +84,24 @@ export function RegisterPendingPayment() {
               <Label htmlFor="pending-payment-amount">Monto</Label>
               <Input
                 id="pending-payment-amount"
-                type="number"
+                type="text"
                 value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-                min="0"
-                step="any"
-                placeholder="Ej. 90000"
+                onChange={(event) => {
+                  const digits = event.target.value.replace(/\D/g, '');
+                  setAmount(digits ? Number(digits).toLocaleString('es-CO') : '');
+                }}
+                inputMode="numeric"
+                placeholder="Ej. 90.000"
                 required
               />
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="pending-payment-date">Fecha límite de pago</Label>
-              <Input
+              <DateTimePicker
                 id="pending-payment-date"
-                type="datetime-local"
                 value={dueDate}
-                onChange={(event) => setDueDate(event.target.value)}
-                required
+                onChange={setDueDate}
               />
             </div>
 

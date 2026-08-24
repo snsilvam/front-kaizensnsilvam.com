@@ -98,7 +98,7 @@ export function Home() {
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardCard
-          title="Dinero disponible"
+          title="Dinero para gastar"
           value={formatMoney(data.availableMoney, data.currency)}
         />
         <DashboardCard
@@ -205,13 +205,13 @@ interface DashboardCardProps {
 
 function DashboardCard({ title, value, detail }: DashboardCardProps) {
   return (
-    <Card className="min-h-34 gap-1.5 border-[#dce5d9] bg-card py-5 shadow-[0_10px_28px_rgba(31,66,46,0.05)]">
+    <Card className="h-34 gap-1.5 border-[#dce5d9] bg-card py-5 shadow-[0_10px_28px_rgba(31,66,46,0.05)]">
       <CardHeader className="px-5">
         <CardTitle className="text-xs font-semibold text-muted-foreground">{title}</CardTitle>
       </CardHeader>
       <CardContent className="mt-auto flex flex-col gap-1.5 px-5">
         <strong className="text-[1.4rem] tracking-[-0.035em] text-foreground">{value}</strong>
-        {detail && <CardDescription className="text-xs">{detail}</CardDescription>}
+        <CardDescription className="min-h-4 text-xs">{detail}</CardDescription>
       </CardContent>
     </Card>
   );
