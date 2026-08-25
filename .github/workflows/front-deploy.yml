@@ -1,9 +1,15 @@
-name: Deploy to Firebase Hosting
+name: Deploy to Cloud Run
 
 on:
   push:
     branches:
       - main
+
+env:
+  PROJECT_ID: kaizensnsilvam
+  REGION: us-central1
+  SERVICE: kaizensnsilvam-frontend
+  IMAGE: kaizensnsilvam-frontend
 
 jobs:
   deploy:
@@ -11,6 +17,7 @@ jobs:
 
     permissions:
       contents: read
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -28,7 +35,19 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Build
+      - name: Authenticate to GCP (OIDC)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/778334880592/locations/global/workloadIdentityPools/github-pool/providers/github-frontend-provider
+          service_account: github-actions-frontend@kaizensnsilvam.iam.gserviceaccount.com
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Build Docker image
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL }}
           VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
@@ -38,12 +57,27 @@ jobs:
           VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
           VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
           VITE_USE_MOCK: ${{ vars.VITE_USE_MOCK }}
-        run: npm run build
+        run: |
+          docker build \
+            --build-arg "VITE_API_URL=$VITE_API_URL" \
+            --build-arg "VITE_API_KEY=$VITE_API_KEY" \
+            --build-arg "VITE_SEBAS_KEY=$VITE_SEBAS_KEY" \
+            --build-arg "VITE_FIREBASE_API_KEY=$VITE_FIREBASE_API_KEY" \
+            --build-arg "VITE_FIREBASE_AUTH_DOMAIN=$VITE_FIREBASE_AUTH_DOMAIN" \
+            --build-arg "VITE_FIREBASE_PROJECT_ID=$VITE_FIREBASE_PROJECT_ID" \
+            --build-arg "VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID" \
+            --build-arg "VITE_USE_MOCK=$VITE_USE_MOCK" \
+            -t us-central1-docker.pkg.dev/kaizensnsilvam/frontend/kaizensnsilvam-frontend:latest .
 
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: kaizensnsilvam
-          channelId: live
+      - name: Push Docker image
+        run: |
+          docker push us-central1-docker.pkg.dev/kaizensnsilvam/frontend/kaizensnsilvam-frontend:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy kaizensnsilvam-frontend \
+            --image us-central1-docker.pkg.dev/kaizensnsilvam/frontend/kaizensnsilvam-frontend:latest \
+            --region us-central1 \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080
