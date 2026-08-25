@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Skeleton } from '../components/ui/skeleton';
+import { DateTimePicker } from '../components/DateTimePicker';
 import { IncomeTable } from '../components/IncomeTable';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { useIncomes } from '../hooks/useIncomes';
@@ -45,7 +46,7 @@ export function RegisterIncome() {
     setError('');
     setSuccess('');
 
-    const numericAmount = Number(amount);
+    const numericAmount = Number(amount.replace(/\./g, ''));
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       setError('Ingresa un monto mayor que cero.');
       return;
@@ -88,7 +89,7 @@ export function RegisterIncome() {
         </p>
       </div>
 
-      <Card>
+      <Card className="overflow-visible">
         <CardHeader>
           <CardTitle>Datos del ingreso</CardTitle>
           <CardDescription>Completa la información para guardarla.</CardDescription>
@@ -110,24 +111,24 @@ export function RegisterIncome() {
               <Label htmlFor="income-amount">Monto</Label>
               <Input
                 id="income-amount"
-                type="number"
+                type="text"
                 value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-                min="0"
-                step="any"
-                placeholder="Ej. 250000"
+                onChange={(event) => {
+                  const digits = event.target.value.replace(/\D/g, '');
+                  setAmount(digits ? Number(digits).toLocaleString('es-CO') : '');
+                }}
+                inputMode="numeric"
+                placeholder="Ej. 2.500.000"
                 required
               />
             </div>
 
             <div className="grid gap-2">
               <Label htmlFor="income-payment-date">Fecha de pago</Label>
-              <Input
+              <DateTimePicker
                 id="income-payment-date"
-                type="datetime-local"
                 value={paymentDate}
-                onChange={(event) => setPaymentDate(event.target.value)}
-                required
+                onChange={setPaymentDate}
               />
             </div>
 
