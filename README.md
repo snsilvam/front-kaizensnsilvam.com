@@ -27,7 +27,14 @@ Identity) con provider y service account propios del frontend
 (`github-frontend-provider` / `github-actions-frontend@`), separados de los del
 backend.
 
-`VITE_API_URL` y `VITE_API_KEY` se inyectan como build args porque Vite las
+Push a `main` ejecuta `.github/workflows/front-deploy.yml`: typecheck, build de
+Vite y despliegue de `dist` a Firebase Hosting. La configuracion SPA se
+encuentra en `firebase.json` y redirige las rutas desconocidas a `index.html`.
+
+Configurar en GitHub el secreto `FIREBASE_SERVICE_ACCOUNT` con las credenciales
+de una cuenta de servicio con permisos de Firebase Hosting.
+
+`VITE_API_URL` y `VITE_API_KEY` se inyectan durante el build porque Vite las
 incrusta en el bundle; configurarlas en el repo de GitHub como variable
 (`vars.VITE_API_URL`) y secreto (`secrets.VITE_API_KEY`).
 
