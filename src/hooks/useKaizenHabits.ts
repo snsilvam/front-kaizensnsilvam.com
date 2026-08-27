@@ -7,6 +7,12 @@ interface UseKaizenHabits {
   loading: boolean;
   error: string | null;
   reload: () => void;
+  /**
+   * Quita un habito de la lista local. Necesario tras un DELETE: el reload
+   * tarda en llegar y, mientras tanto, la lista vieja aun contiene el habito
+   * borrado, asi que quien la lea volveria a seleccionarlo.
+   */
+  remove: (habitId: string) => void;
 }
 
 /** Habitos del usuario autenticado (GET /kaizen-habits). */
@@ -40,5 +46,9 @@ export function useKaizenHabits(): UseKaizenHabits {
 
   const reload = useCallback(() => setReloadKey((key) => key + 1), []);
 
-  return { data, loading, error, reload };
+  const remove = useCallback((habitId: string) => {
+    setData((current) => current?.filter((habit) => habit.id !== habitId) ?? null);
+  }, []);
+
+  return { data, loading, error, reload, remove };
 }

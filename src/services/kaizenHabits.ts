@@ -107,3 +107,14 @@ export function createKaizenHabitGoal(
     false,
   );
 }
+
+/** DELETE /kaizen-habits/:habitId: borra el habito y todo su historial. */
+export function deleteKaizenHabit(habitId: string): Promise<unknown> {
+  return request<unknown>(
+    `/kaizen-habits/${encodeURIComponent(habitId)}`,
+    {
+      method: 'DELETE',
+    },
+    false,
+  );
+}
