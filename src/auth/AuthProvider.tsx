@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AuthContext, type AuthState, type AuthUser } from './AuthContext';
-import { getIdToken, signInWithGoogle, signOutUser, watchAuth } from './firebase';
+import {
+  getIdToken,
+  registerWithEmail,
+  sendPasswordReset,
+  signInWithEmail,
+  signInWithGoogle,
+  signOutUser,
+  watchAuth,
+} from './firebase';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -22,10 +30,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       loading,
-      signIn: async () => {
+      // Todo login recien hecho pasa por la seleccion de app, sin importar el canal.
+      signInWithGoogle: async () => {
         await signInWithGoogle();
         setNeedsAppSelection(true);
       },
+      signInWithEmail: async (email, password) => {
+        await signInWithEmail(email, password);
+        setNeedsAppSelection(true);
+      },
+      registerWithEmail: async (email, password, displayName) => {
+        setUser(await registerWithEmail(email, password, displayName));
+        setNeedsAppSelection(true);
+      },
+      sendPasswordReset,
       signOut: signOutUser,
       needsAppSelection,
       completeAppSelection: () => setNeedsAppSelection(false),
