@@ -3,13 +3,15 @@ import { Button } from './ui/button';
 
 interface ErrorMessageProps {
   message: string;
+  /** Encabezado del error; por defecto el del resumen financiero. */
+  title?: string;
   onRetry?: () => void;
 }
 
-export function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
+export function ErrorMessage({ message, title = 'No pudimos cargar tu resumen', onRetry }: ErrorMessageProps) {
   return (
     <Alert variant="destructive" className="max-w-xl">
-      <AlertTitle>No pudimos cargar tu resumen</AlertTitle>
+      <AlertTitle>{title}</AlertTitle>
       <AlertDescription>{message}</AlertDescription>
       {onRetry && (
         <AlertAction>

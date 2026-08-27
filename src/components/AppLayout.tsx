@@ -4,6 +4,7 @@ import KaizenLogo from './KaizenLogo';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { useAuth } from '../auth/useAuth';
+import { ModeSwitch } from './ModeSwitch';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -44,6 +45,8 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
           </a>
 
          
+          <ModeSwitch currentPath={currentPath} />
+
           <Button
             type="button"
             variant="outline"
