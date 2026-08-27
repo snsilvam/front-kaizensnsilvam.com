@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
-import { CalendarDays, CheckCheck, Hammer, LogOut, Plus, Sparkles, Timer } from 'lucide-react';
+import { CalendarDays, CheckCheck, Hammer, LogOut, Plus, Sparkles, Timer, Trash2 } from 'lucide-react';
 import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Alert, AlertDescription } from '../components/ui/alert';
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Skeleton } from '../components/ui/skeleton';
+import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { HabitCalendar } from '../components/HabitCalendar';
 import { HabitGoalCard } from '../components/HabitGoalCard';
@@ -17,7 +19,11 @@ import { useKaizenHabitTracking } from '../hooks/useKaizenHabitTracking';
 import { useKaizenHabits } from '../hooks/useKaizenHabits';
 import { browserTimezone, monthStart, shiftMonth, todayKey } from '../lib/habitDates';
 import { ApiError } from '../services/api';
-import { registerKaizenHabit, registerKaizenHabitRepetition } from '../services/kaizenHabits';
+import {
+  deleteKaizenHabit,
+  registerKaizenHabit,
+  registerKaizenHabitRepetition,
+} from '../services/kaizenHabits';
 import type { KaizenHabit } from '../types/kaizenHabit';
 
 interface HabitForm {
@@ -71,6 +77,9 @@ export function Habits() {
   const [savingRepetition, setSavingRepetition] = useState(false);
   const [repetitionError, setRepetitionError] = useState('');
   const [feedback, setFeedback] = useState('');
+  const [habitToDelete, setHabitToDelete] = useState<KaizenHabit | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   // Al abrir la pagina se selecciona el primer habito para no dejar el panel vacio.
   useEffect(() => {
@@ -126,6 +135,32 @@ export function Habits() {
       );
     } finally {
       setSavingRepetition(false);
+    }
+  }
+
+  async function confirmDelete() {
+    if (!habitToDelete) return;
+
+    setDeleting(true);
+    setDeleteError('');
+
+    try {
+      await deleteKaizenHabit(habitToDelete.id);
+      // La seleccion pasa al siguiente habito de la lista ya sin el borrado; el
+      // reload posterior solo confirma contra el backend.
+      const remaining = (habits.data ?? []).filter((habit) => habit.id !== habitToDelete.id);
+      habits.remove(habitToDelete.id);
+      setSelectedHabitId(remaining[0]?.id ?? null);
+      setHabitToDelete(null);
+      setFeedback(`Eliminaste "${habitToDelete.name}" y su historial.`);
+      habits.reload();
+    } catch (requestError) {
+      setHabitToDelete(null);
+      setDeleteError(
+        requestError instanceof Error ? requestError.message : 'No fue posible eliminar el hábito.',
+      );
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -222,8 +257,29 @@ export function Habits() {
                           {frequencyLabel(selectedHabit.frequency)} · {selectedHabit.time || '--:--'}
                           {selectedHabit.location ? ` · ${selectedHabit.location}` : ''}
                         </CardDescription>
+                        <CardAction>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => {
+                              setDeleteError('');
+                              setHabitToDelete(selectedHabit);
+                            }}
+                          >
+                            <Trash2 aria-hidden="true" />
+                            <span className="hidden sm:inline">Eliminar</span>
+                          </Button>
+                        </CardAction>
                       </CardHeader>
                       <CardContent className="grid gap-4">
+                        {deleteError && (
+                          <Alert variant="destructive">
+                            <AlertDescription>{deleteError}</AlertDescription>
+                          </Alert>
+                        )}
+
                         <div className="rounded-xl border border-primary/15 bg-accent/60 px-4 py-3.5">
                           <p className="text-xs font-bold tracking-[0.08em] text-primary uppercase">Hoy</p>
                           <p className="mt-1.5 text-sm text-foreground">
@@ -344,6 +400,15 @@ export function Habits() {
           onConfirm={(input) => saveRepetition(selectedDay, input)}
         />
       )}
+
+      <ConfirmDeleteDialog
+        open={habitToDelete !== null}
+        itemName={habitToDelete?.name ?? ''}
+        itemType="hábito"
+        isDeleting={deleting}
+        onCancel={() => setHabitToDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
