@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { useAuth } from '../auth/useAuth';
 import { ModeSwitch } from './ModeSwitch';
+import { UserAvatar } from './UserAvatar';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -46,6 +47,8 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
 
          
           <ModeSwitch currentPath={currentPath} />
+
+          <UserAvatar />
 
           <Button
             type="button"

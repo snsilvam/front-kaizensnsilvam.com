@@ -15,6 +15,7 @@ import { HabitList } from '../components/HabitList';
 import { HabitRepetitionDialog } from '../components/HabitRepetitionDialog';
 import { HabitStats } from '../components/HabitStats';
 import { ModeSwitch } from '../components/ModeSwitch';
+import { UserAvatar } from '../components/UserAvatar';
 import { useKaizenHabitTracking } from '../hooks/useKaizenHabitTracking';
 import { useKaizenHabits } from '../hooks/useKaizenHabits';
 import { browserTimezone, monthStart, shiftMonth, todayKey } from '../lib/habitDates';
@@ -184,6 +185,7 @@ export function Habits() {
         <p className="mb-2.5 text-xs font-bold tracking-[0.1em] text-primary uppercase">Construye tu identidad</p>
         <div className="flex items-center gap-2">
           <ModeSwitch currentPath="/habits" />
+          <UserAvatar />
           <Button type="button" variant="outline" size="sm" className="text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive" onClick={signOut}>
             <LogOut aria-hidden="true" />
             <span className="hidden sm:inline">Cerrar sesión..</span>

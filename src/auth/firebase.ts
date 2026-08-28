@@ -97,7 +97,7 @@ export function refreshIdToken(): Promise<string | null> {
 }
 
 function toAuthUser(user: User): AuthUser {
-  return { uid: user.uid, email: user.email, displayName: user.displayName };
+  return { uid: user.uid, email: user.email, displayName: user.displayName, photoURL: user.photoURL };
 }
 
 const ERROR_MESSAGES: Record<string, string> = {

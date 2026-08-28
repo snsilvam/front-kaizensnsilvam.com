@@ -8,6 +8,8 @@ export interface AuthUser {
   uid: string;
   email: string | null;
   displayName: string | null;
+  /** Solo el login con Google la entrega; con correo y contraseña es null. */
+  photoURL: string | null;
 }
 
 export interface AuthState {
