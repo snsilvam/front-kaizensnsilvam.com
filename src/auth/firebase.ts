@@ -85,6 +85,17 @@ export function getIdToken(): Promise<string | null> {
   return auth.currentUser?.getIdToken() ?? Promise.resolve(null);
 }
 
+/**
+ * Renueva el ID token a la fuerza.
+ *
+ * updateProfile no toca el token ya emitido: el claim `name` recien puesto no
+ * llega al backend hasta que se renueva. Sin esto, el usuario que se registra
+ * con correo quedaria guardado sin nombre.
+ */
+export function refreshIdToken(): Promise<string | null> {
+  return auth.currentUser?.getIdToken(true) ?? Promise.resolve(null);
+}
+
 function toAuthUser(user: User): AuthUser {
   return { uid: user.uid, email: user.email, displayName: user.displayName };
 }

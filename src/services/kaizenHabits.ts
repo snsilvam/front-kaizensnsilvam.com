@@ -16,7 +16,6 @@ export interface RegisterKaizenHabitInput {
   action: string;
   minimumAction2min: string;
   reward: string;
-  frequency: string;
   time: string;
   location: string;
   timezone?: string;
@@ -40,6 +39,26 @@ export function registerKaizenHabit(input: RegisterKaizenHabitInput): Promise<Ka
     '/kaizen-habits',
     {
       method: 'POST',
+      body: JSON.stringify(input),
+    },
+    false,
+  );
+}
+
+/**
+ * PUT /kaizen-habits/:habitId: edita un habito.
+ *
+ * Es un reemplazo completo, no un parche: hay que mandar todos los campos.
+ * El historial no se toca, las repeticiones siguen colgando del mismo id.
+ */
+export function updateKaizenHabit(
+  habitId: string,
+  input: RegisterKaizenHabitInput,
+): Promise<KaizenHabit> {
+  return request<KaizenHabit>(
+    `/kaizen-habits/${encodeURIComponent(habitId)}`,
+    {
+      method: 'PUT',
       body: JSON.stringify(input),
     },
     false,

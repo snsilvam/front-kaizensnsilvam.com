@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
-import { CalendarDays, CheckCheck, Hammer, LogOut, Plus, Sparkles, Timer, Trash2 } from 'lucide-react';
+import { CalendarDays, CheckCheck, Hammer, LogOut, Pencil, Plus, Sparkles, Timer, Trash2 } from 'lucide-react';
 import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/ui/button';
 import { Alert, AlertDescription } from '../components/ui/alert';
@@ -11,7 +11,7 @@ import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { HabitCalendar } from '../components/HabitCalendar';
 import { HabitGoalCard } from '../components/HabitGoalCard';
-import { HabitList, frequencyLabel } from '../components/HabitList';
+import { HabitList } from '../components/HabitList';
 import { HabitRepetitionDialog } from '../components/HabitRepetitionDialog';
 import { HabitStats } from '../components/HabitStats';
 import { ModeSwitch } from '../components/ModeSwitch';
@@ -23,8 +23,15 @@ import {
   deleteKaizenHabit,
   registerKaizenHabit,
   registerKaizenHabitRepetition,
+  updateKaizenHabit,
 } from '../services/kaizenHabits';
 import type { KaizenHabit } from '../types/kaizenHabit';
+
+/**
+ * Estado del formulario de habitos: cerrado, creando o editando uno concreto.
+ * Es un union y no dos booleanos porque los tres estados se excluyen.
+ */
+type HabitEditor = null | { mode: 'create' } | { mode: 'edit'; habit: KaizenHabit };
 
 interface HabitForm {
   name: string;
@@ -35,7 +42,6 @@ interface HabitForm {
   action: string;
   minimumAction2min: string;
   reward: string;
-  frequency: string;
   time: string;
   location: string;
   active: boolean;
@@ -50,7 +56,6 @@ const initialHabit: HabitForm = {
   action: 'Abrir el libro y leer',
   minimumAction2min: 'Leer una página',
   reward: '',
-  frequency: 'daily',
   time: '21:30',
   location: 'Habitación',
   active: true,
@@ -60,7 +65,8 @@ export function Habits() {
   const { signOut } = useAuth();
   const habits = useKaizenHabits();
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
-  const [isForging, setIsForging] = useState(false);
+  // El formulario esta cerrado (null), creando o editando un habito concreto.
+  const [editor, setEditor] = useState<HabitEditor>(null);
 
   const selectedHabit = useMemo(
     () => habits.data?.find((habit) => habit.id === selectedHabitId) ?? null,
@@ -173,12 +179,14 @@ export function Habits() {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 sm:px-6">
       <header className="flex min-h-20 items-center justify-between border-b">
-        <a className="text-lg font-bold tracking-tight text-foreground no-underline" href="/">Kaizen</a>
+        <a className="text-lg font-bold tracking-tight text-foreground no-underline" href="/">FORJANDO</a>
+        <div className="mx-auto mb-5 grid size-14 place-items-center rounded-2xl bg-accent text-primary"><Sparkles aria-hidden="true" className="size-7" /></div>
+        <p className="mb-2.5 text-xs font-bold tracking-[0.1em] text-primary uppercase">Construye tu identidad</p>
         <div className="flex items-center gap-2">
           <ModeSwitch currentPath="/habits" />
           <Button type="button" variant="outline" size="sm" className="text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive" onClick={signOut}>
             <LogOut aria-hidden="true" />
-            <span className="hidden sm:inline">Cerrar sesión</span>
+            <span className="hidden sm:inline">Cerrar sesión..</span>
           </Button>
         </div>
       </header>
@@ -186,8 +194,6 @@ export function Habits() {
       <main className="flex-1 py-10 sm:py-14">
         <section aria-labelledby="habits-title">
           <div className="text-center">
-            <div className="mx-auto mb-5 grid size-14 place-items-center rounded-2xl bg-accent text-primary"><Sparkles aria-hidden="true" className="size-7" /></div>
-            <p className="mb-2.5 text-xs font-bold tracking-[0.1em] text-primary uppercase">Construye tu identidad</p>
             <h1 id="habits-title" className="font-heading text-4xl font-bold tracking-[-0.055em] text-foreground sm:text-5xl">Kaizen Habits</h1>
             <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">Diseña pequeños hábitos que te acerquen cada día a la persona que quieres ser.</p>
           </div>
@@ -211,24 +217,33 @@ export function Habits() {
 
           {!habits.loading && !habits.error && (
             <>
-              {!isForging && (
+              {!editor && (
                 <div className="mt-8 flex justify-center">
-                  <Button type="button" size="lg" onClick={() => setIsForging(true)}>
+                  <Button type="button" size="lg" onClick={() => setEditor({ mode: 'create' })}>
                     <Hammer aria-hidden="true" />
-                    {habits.data && habits.data.length > 0 ? 'Forjar otro hábito' : 'Forjar'}
+                    {habits.data && habits.data.length > 0 ? 'otro hábito?' : 'Forjar'}
                   </Button>
                 </div>
               )}
 
-              {isForging && (
-                <ForgeHabit
-                  onCancel={() => setIsForging(false)}
-                  onCreated={(habit) => {
-                    setIsForging(false);
+              {editor && (
+                <HabitFormCard
+                  // La key reinicia el formulario al pasar de un habito a otro:
+                  // sin ella React reutiliza el estado del anterior.
+                  key={editor.mode === 'edit' ? editor.habit.id : 'nuevo'}
+                  existing={editor.mode === 'edit' ? editor.habit : null}
+                  onCancel={() => setEditor(null)}
+                  onSaved={(habit) => {
+                    const created = editor.mode === 'create';
+                    setEditor(null);
                     habits.reload();
                     setSelectedHabitId(habit.id);
                     setVisibleMonth(monthStart(todayKey(habit.timezone)));
-                    setFeedback('Hábito creado. Registra tu primera repetición cuando lo cumplas.');
+                    setFeedback(
+                      created
+                        ? 'Hábito creado. Registra tu primera repetición cuando lo cumplas.'
+                        : 'Cambios guardados. Tu historial de repeticiones sigue intacto.',
+                    );
                   }}
                 />
               )}
@@ -254,23 +269,39 @@ export function Habits() {
                       <CardHeader>
                         <CardTitle>{selectedHabit.name}</CardTitle>
                         <CardDescription>
-                          {frequencyLabel(selectedHabit.frequency)} · {selectedHabit.time || '--:--'}
+                          {selectedHabit.time || '--:--'}
                           {selectedHabit.location ? ` · ${selectedHabit.location}` : ''}
                         </CardDescription>
                         <CardAction>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                            onClick={() => {
-                              setDeleteError('');
-                              setHabitToDelete(selectedHabit);
-                            }}
-                          >
-                            <Trash2 aria-hidden="true" />
-                            <span className="hidden sm:inline">Eliminar</span>
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground hover:text-primary"
+                              onClick={() => {
+                                setDeleteError('');
+                                setFeedback('');
+                                setEditor({ mode: 'edit', habit: selectedHabit });
+                              }}
+                            >
+                              <Pencil aria-hidden="true" />
+                              <span className="hidden sm:inline">Editar</span>
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                              onClick={() => {
+                                setDeleteError('');
+                                setHabitToDelete(selectedHabit);
+                              }}
+                            >
+                              <Trash2 aria-hidden="true" />
+                              <span className="hidden sm:inline">Eliminar</span>
+                            </Button>
+                          </div>
                         </CardAction>
                       </CardHeader>
                       <CardContent className="grid gap-4">
@@ -372,7 +403,7 @@ export function Habits() {
                       <CardDescription>Forja tu primer hábito para empezar a registrar repeticiones, rachas y metas.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Button type="button" variant="outline" onClick={() => setIsForging(true)}>
+                      <Button type="button" variant="outline" onClick={() => setEditor({ mode: 'create' })}>
                         <Plus aria-hidden="true" />
                         Forjar hábito
                       </Button>
@@ -413,14 +444,39 @@ export function Habits() {
   );
 }
 
-interface ForgeHabitProps {
+interface HabitFormCardProps {
+  /** Habito a editar; null para crear uno nuevo. */
+  existing: KaizenHabit | null;
   onCancel: () => void;
-  onCreated: (habit: KaizenHabit) => void;
+  onSaved: (habit: KaizenHabit) => void;
 }
 
-/** Formulario de creacion; al guardar devuelve el habito para seleccionarlo. */
-function ForgeHabit({ onCancel, onCreated }: ForgeHabitProps) {
-  const [habit, setHabit] = useState<HabitForm>(initialHabit);
+/** Convierte el habito del backend en el estado del formulario. */
+function formOf(habit: KaizenHabit): HabitForm {
+  return {
+    name: habit.name,
+    description: habit.description,
+    identity: habit.identity,
+    cue: habit.cue,
+    attractiveness: habit.attractiveness,
+    action: habit.action,
+    minimumAction2min: habit.minimumAction2min,
+    reward: habit.reward,
+    time: habit.time,
+    location: habit.location,
+    active: habit.active,
+  };
+}
+
+/**
+ * Formulario de creacion y de edicion; al guardar devuelve el habito.
+ *
+ * Es el mismo formulario en los dos casos porque el contrato es el mismo: el
+ * PUT reemplaza todos los campos, igual que el POST los crea.
+ */
+function HabitFormCard({ existing, onCancel, onSaved }: HabitFormCardProps) {
+  const editing = existing !== null;
+  const [habit, setHabit] = useState<HabitForm>(existing ? formOf(existing) : initialHabit);
   const [forgeAnimation, setForgeAnimation] = useState(false);
   const [error, setError] = useState('');
 
@@ -435,27 +491,35 @@ function ForgeHabit({ onCancel, onCreated }: ForgeHabitProps) {
     setError('');
     setForgeAnimation(true);
 
+    // La zona horaria define el dia contable de cada repeticion. Al editar se
+    // conserva la del habito: cambiarla movería los dias ya registrados.
+    const input = {
+      name: habit.name,
+      description: habit.description,
+      identity: habit.identity,
+      cue: habit.cue,
+      attractiveness: habit.attractiveness,
+      action: habit.action,
+      minimumAction2min: habit.minimumAction2min,
+      reward: habit.reward,
+      time: habit.time,
+      location: habit.location,
+      timezone: existing?.timezone ?? browserTimezone(),
+      active: habit.active,
+    };
+
     try {
-      // La zona horaria define el dia contable de cada repeticion.
-      const created = await registerKaizenHabit({
-        name: habit.name,
-        description: habit.description,
-        identity: habit.identity,
-        cue: habit.cue,
-        attractiveness: habit.attractiveness,
-        action: habit.action,
-        minimumAction2min: habit.minimumAction2min,
-        reward: habit.reward,
-        frequency: habit.frequency,
-        time: habit.time,
-        location: habit.location,
-        timezone: browserTimezone(),
-        active: habit.active,
-      });
-      onCreated(created);
+      const saved = existing
+        ? await updateKaizenHabit(existing.id, input)
+        : await registerKaizenHabit(input);
+      onSaved(saved);
     } catch (requestError) {
       setError(
-        requestError instanceof Error ? requestError.message : 'No fue posible crear el hábito.',
+        requestError instanceof Error
+          ? requestError.message
+          : editing
+            ? 'No fue posible guardar los cambios.'
+            : 'No fue posible crear el hábito.',
       );
     } finally {
       setForgeAnimation(false);
@@ -466,8 +530,12 @@ function ForgeHabit({ onCancel, onCreated }: ForgeHabitProps) {
     <div className="mt-10 grid gap-6 lg:grid-cols-[1.25fr_0.75fr] lg:items-start">
       <Card>
         <CardHeader>
-          <CardTitle>Forja un nuevo hábito</CardTitle>
-          <CardDescription>Define la acción, el momento y el contexto que harán que tu hábito sea fácil de repetir.</CardDescription>
+          <CardTitle>{editing ? 'Edita tu hábito' : 'Forja un nuevo hábito'}</CardTitle>
+          <CardDescription>
+            {editing
+              ? 'Ajusta la acción, el momento y el contexto. Tu historial de repeticiones no se toca.'
+              : 'Define la acción, el momento y el contexto que harán que tu hábito sea fácil de repetir.'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="grid gap-5" onSubmit={submit}>
@@ -480,12 +548,6 @@ function ForgeHabit({ onCancel, onCreated }: ForgeHabitProps) {
             <TextField label="Acción" name="action" value={habit.action} onChange={updateField} required placeholder="La acción principal" />
             <TextField label="Acción mínima (2 min)" name="minimumAction2min" value={habit.minimumAction2min} onChange={updateField} required placeholder="La versión más pequeña" />
             <TextField label="Recompensa" name="reward" value={habit.reward} onChange={updateField} placeholder="¿Cómo te recompensarás?" />
-            <div className="grid gap-2">
-              <Label htmlFor="habit-frequency">Frecuencia</Label>
-              <select id="habit-frequency" name="frequency" value={habit.frequency} onChange={updateField} className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
-                <option value="daily">Diaria</option><option value="weekly">Semanal</option><option value="monthly">Mensual</option>
-              </select>
-            </div>
             <Field label="Hora" name="time" type="time" value={habit.time} onChange={updateField} required />
             <Field label="Lugar" name="location" value={habit.location} onChange={updateField} required placeholder="Ej. Habitación" />
           </div>
@@ -498,7 +560,9 @@ function ForgeHabit({ onCancel, onCreated }: ForgeHabitProps) {
             <Button type="button" variant="ghost" onClick={onCancel}>Cancelar</Button>
             <Button type="submit" disabled={forgeAnimation}>
               <Hammer aria-hidden="true" className={forgeAnimation ? 'animate-bounce' : undefined} />
-              {forgeAnimation ? 'Forjando...' : 'Forjar hábito'}
+              {forgeAnimation
+                ? editing ? 'Guardando...' : 'Forjando...'
+                : editing ? 'Guardar cambios' : 'Forjar hábito'}
             </Button>
           </div>
           </form>
@@ -523,7 +587,7 @@ function HabitPreview({ habit, forgeAnimation }: { habit: HabitForm; forgeAnimat
       <CardContent>
         <div className="relative overflow-hidden rounded-xl border border-primary/15 bg-background/80 p-4">
           {forgeAnimation && <div className="absolute inset-x-0 top-0 h-1 animate-pulse bg-primary" />}
-          <p className="text-xs font-bold tracking-[0.1em] text-primary uppercase">{habit.frequency === 'daily' ? 'Cada día' : frequencyLabel(habit.frequency)}</p>
+          <p className="text-xs font-bold tracking-[0.1em] text-primary uppercase">Cada día</p>
           <h2 className="mt-2 text-xl font-bold text-foreground">{habit.name || 'Tu nuevo hábito'}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{habit.identity || 'La identidad que estás construyendo'}</p>
 

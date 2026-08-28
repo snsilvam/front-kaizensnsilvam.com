@@ -11,7 +11,6 @@ export interface KaizenHabit {
   action: string;
   minimumAction2min: string;
   reward: string;
-  frequency: string;
   time: string;
   location: string;
   /** Zona horaria IANA usada para calcular el dia contable del habito. */

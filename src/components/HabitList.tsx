@@ -1,15 +1,5 @@
-import { CalendarClock, Flame, MapPin } from 'lucide-react';
+import { CalendarClock, MapPin } from 'lucide-react';
 import type { KaizenHabit } from '../types/kaizenHabit';
-
-const FREQUENCY_LABELS: Record<string, string> = {
-  daily: 'Diaria',
-  weekly: 'Semanal',
-  monthly: 'Mensual',
-};
-
-export function frequencyLabel(frequency: string): string {
-  return FREQUENCY_LABELS[frequency] ?? frequency;
-}
 
 interface HabitListProps {
   habits: KaizenHabit[];
@@ -58,10 +48,6 @@ export function HabitList({ habits, selectedId, onSelect }: HabitListProps) {
                 {habit.identity || habit.description}
               </p>
               <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.7rem] text-muted-foreground">
-                <span className="inline-flex items-center gap-1">
-                  <Flame aria-hidden="true" className="size-3" />
-                  {frequencyLabel(habit.frequency)}
-                </span>
                 <span className="inline-flex items-center gap-1">
                   <CalendarClock aria-hidden="true" className="size-3" />
                   {habit.time || '--:--'}
