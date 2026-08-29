@@ -8,6 +8,7 @@ import {
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Loading } from '../components/Loading';
 import { PendingList } from '../components/PendingList';
+import { PaidPaymentsSection } from '../components/PaidPaymentsSection';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { ConfirmPaymentDialog } from '../components/ConfirmPaymentDialog';
 import { useDashboard } from '../hooks/useDashboard';
@@ -65,6 +66,12 @@ export function Home() {
   if (error) return <ErrorMessage message={error} onRetry={reload} />;
   if (!data) return null;
 
+  // La caja de hoy llega negativa cuando ya salió más plata de la que ha
+  // entrado. Esta tarjeta la muestra en cero: "dinero para gastar" responde
+  // cuánto puedes gastar, y por debajo de cero la respuesta es nada. El número
+  // real sigue intacto en `data.availableMoney` para el resto del cálculo.
+  const availableToSpend = Math.max(0, data.availableMoney);
+
   const budget = data.availableMoney + (data.nextIncome?.amount ?? 0);
   const pendingExpenses = data.pending.reduce(
     (total, payment) => total + (payment.amount ?? 0),
@@ -99,7 +106,7 @@ export function Home() {
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <DashboardCard
           title="Dinero para gastar"
-          value={formatMoney(data.availableMoney, data.currency)}
+          value={formatMoney(availableToSpend, data.currency)}
         />
         <DashboardCard
           title="Próximo ingreso"
@@ -162,6 +169,8 @@ export function Home() {
           />
         </CardContent>
       </Card>
+
+      <PaidPaymentsSection currency={data.currency} />
 
       <ConfirmDeleteDialog
         open={pendingToDelete !== null}

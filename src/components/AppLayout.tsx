@@ -14,6 +14,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ children, currentPath }: AppLayoutProps) {
   const isIncomePage = currentPath === '/ingresos';
+  const isMarketPage = currentPath === '/mercado';
   const { signOut } = useAuth();
 
   return (
@@ -42,10 +43,21 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
             }`}
             href="/ingresos"
           >
-            Ingresos
+            Activos(ingresos)
           </a>
 
          
+          <a
+            className={`rounded-md px-3 py-2 text-sm font-semibold no-underline transition-colors ${
+              isMarketPage
+                ? 'bg-accent text-primary'
+                : 'text-muted-foreground hover:bg-muted hover:text-primary'
+            }`}
+            href="/mercado"
+          >
+            Mercado
+          </a>
+
           <ModeSwitch currentPath={currentPath} />
 
           <UserAvatar />

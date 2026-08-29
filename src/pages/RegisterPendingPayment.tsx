@@ -5,10 +5,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { DateTimePicker } from '../components/DateTimePicker';
-import { registerPendingPayment } from '../services/pendingPayments';
+import { registerPendingPayment, type PendingPaymentCategory } from '../services/pendingPayments';
+
+/**
+ * Con "mercado" el gasto pendiente pasa a ser un presupuesto de compra y
+ * aparece en /mercado. Es el unico valor que enciende ese modulo, por eso el
+ * selector es un conjunto cerrado y no texto libre.
+ */
+const CATEGORY_OPTIONS: Array<{ value: PendingPaymentCategory; label: string; hint: string }> = [
+  { value: 'otros', label: 'Gasto normal', hint: 'Solo quiero tenerlo presente.' },
+  { value: 'mercado', label: 'Mercado', hint: 'Voy a comprar contra este monto.' },
+];
 
 export function RegisterPendingPayment() {
   const [name, setName] = useState('');
+  const [category, setCategory] = useState<PendingPaymentCategory>('otros');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [error, setError] = useState('');
@@ -38,11 +49,17 @@ export function RegisterPendingPayment() {
         name: name.trim(),
         amount: numericAmount,
         dueDate: date.toISOString(),
+        category,
       });
-      setSuccess('Gasto pendiente registrado correctamente.');
+      setSuccess(
+        category === 'mercado'
+          ? 'Presupuesto de mercado creado. Ya puedes usarlo en Mercado.'
+          : 'Gasto pendiente registrado correctamente.',
+      );
       setName('');
       setAmount('');
       setDueDate('');
+      setCategory('otros');
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'No fue posible registrar el gasto pendiente.');
     } finally {
@@ -69,6 +86,35 @@ export function RegisterPendingPayment() {
         </CardHeader>
         <CardContent>
           <form className="flex flex-col gap-5" onSubmit={submit}>
+            <div className="grid gap-2">
+              <span id="pending-payment-category-label" className="text-sm font-medium leading-none">
+                Tipo de gasto
+              </span>
+              <div
+                className="grid grid-cols-2 gap-2"
+                role="radiogroup"
+                aria-labelledby="pending-payment-category-label"
+              >
+                {CATEGORY_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={category === option.value}
+                    onClick={() => setCategory(option.value)}
+                    className={`rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                      category === option.value
+                        ? 'border-primary bg-primary/10'
+                        : 'border-input hover:bg-muted'
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold text-foreground">{option.label}</span>
+                    <span className="block text-xs text-muted-foreground">{option.hint}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="grid gap-2">
               <Label htmlFor="pending-payment-name">Nombre</Label>
               <Input

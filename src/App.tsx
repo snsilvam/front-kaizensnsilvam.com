@@ -5,6 +5,7 @@ import { RegisterHabit1 } from './pages/RegisterHabit1';
 import { Sebas } from './pages/Sebas';
 import { AppLayout } from './components/AppLayout';
 import { Habits } from './pages/Habits';
+import { Market } from './pages/Market';
 
 export default function App() {
   const currentPath = window.location.pathname;
@@ -13,7 +14,7 @@ export default function App() {
 
   return (
     <AppLayout currentPath={currentPath}>
-      {currentPath === '/sebas' ? <Sebas /> : currentPath === '/ingresos' ? <RegisterIncome /> : currentPath === '/gastos' ? <RegisterPendingPayment /> : currentPath === '/habito-1' ? <RegisterHabit1 /> : <Home />}
+      {currentPath === '/sebas' ? <Sebas /> : currentPath === '/ingresos' ? <RegisterIncome /> : currentPath === '/gastos' ? <RegisterPendingPayment /> : currentPath === '/habito-1' ? <RegisterHabit1 /> : currentPath === '/mercado' ? <Market /> : <Home />}
     </AppLayout>
   );
 }
