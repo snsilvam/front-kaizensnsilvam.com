@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
-import { CalendarDays, CheckCheck, Hammer, LogOut, Pencil, Plus, Sparkles, Timer, Trash2 } from 'lucide-react';
-import { useAuth } from '../auth/useAuth';
+import { CalendarDays, CheckCheck, Hammer, Pencil, Plus, Timer, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -9,13 +8,13 @@ import { Label } from '../components/ui/label';
 import { Skeleton } from '../components/ui/skeleton';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { HabitBushidoPath } from '../components/HabitBushidoPath';
 import { HabitCalendar } from '../components/HabitCalendar';
 import { HabitGoalCard } from '../components/HabitGoalCard';
 import { HabitList } from '../components/HabitList';
 import { HabitRepetitionDialog } from '../components/HabitRepetitionDialog';
 import { HabitStats } from '../components/HabitStats';
-import { ModeSwitch } from '../components/ModeSwitch';
-import { UserAvatar } from '../components/UserAvatar';
+import { HabitsHeader } from '../components/HabitsHeader';
 import { useKaizenHabitTracking } from '../hooks/useKaizenHabitTracking';
 import { useKaizenHabits } from '../hooks/useKaizenHabits';
 import { browserTimezone, monthStart, shiftMonth, todayKey } from '../lib/habitDates';
@@ -63,7 +62,6 @@ const initialHabit: HabitForm = {
 };
 
 export function Habits() {
-  const { signOut } = useAuth();
   const habits = useKaizenHabits();
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   // El formulario esta cerrado (null), creando o editando un habito concreto.
@@ -178,21 +176,10 @@ export function Habits() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 sm:px-6">
-      <header className="flex min-h-20 items-center justify-between border-b">
-        <a className="text-lg font-bold tracking-tight text-foreground no-underline" href="/">FORJANDO</a>
-        <div className="mx-auto mb-5 grid size-14 place-items-center rounded-2xl bg-accent text-primary"><Sparkles aria-hidden="true" className="size-7" /></div>
-        <p className="mb-2.5 text-xs font-bold tracking-[0.1em] text-primary uppercase">Construye tu identidad</p>
-        <div className="flex items-center gap-2">
-          <ModeSwitch currentPath="/habits" />
-          <UserAvatar />
-          <Button type="button" variant="outline" size="sm" className="text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive" onClick={signOut}>
-            <LogOut aria-hidden="true" />
-            <span className="hidden sm:inline">Cerrar sesión..</span>
-          </Button>
-        </div>
-      </header>
+    <div className="flex min-h-screen w-full flex-col">
+      <HabitsHeader currentPath="/habits" />
 
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 sm:px-6">
       <main className="flex-1 py-10 sm:py-14">
         <section aria-labelledby="habits-title">
           <div className="text-center">
@@ -362,6 +349,8 @@ export function Habits() {
                       </CardContent>
                     </Card>
 
+                    <HabitBushidoPath stats={tracking.stats} loading={tracking.loading} />
+
                     <Card>
                       <CardHeader>
                         <CardTitle>Calendario de repeticiones</CardTitle>
@@ -417,6 +406,7 @@ export function Habits() {
           )}
         </section>
       </main>
+      </div>
 
       {selectedHabit && selectedDay && (
         <HabitRepetitionDialog

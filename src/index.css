@@ -64,3 +64,90 @@
     @apply min-w-80 bg-background text-foreground;
   }
 }
+
+/* --- Modo habitos: tema samurai -------------------------------------------
+   El header del modo habitos usa una paleta de tinta japonesa: sumi (negro
+   azulado), aka (bermellon) y kin (oro viejo). Los patrones son CSS puro para
+   no sumar imagenes al bundle. */
+@layer components {
+  .sumi-band {
+    --sumi: #0f141b;
+    --sumi-soft: #1b2532;
+    --aka: #c8362d;
+    --kin: #c9a227;
+    --washi: #f4efe4;
+    background-color: var(--sumi);
+    background-image:
+      radial-gradient(130% 150% at 86% -40%, rgba(200, 54, 45, 0.38) 0%, rgba(200, 54, 45, 0) 58%),
+      linear-gradient(180deg, var(--sumi-soft) 0%, var(--sumi) 100%);
+  }
+
+  /* Seigaiha (青海波): las olas concentricas del textil tradicional. */
+  .sumi-seigaiha::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle at 50% 100%, transparent 20%, rgba(244, 239, 228, 0.08) 21%, rgba(244, 239, 228, 0.08) 23%, transparent 24%, transparent 42%, rgba(244, 239, 228, 0.08) 43%, rgba(244, 239, 228, 0.08) 45%, transparent 46%, transparent 64%, rgba(244, 239, 228, 0.08) 65%, rgba(244, 239, 228, 0.08) 67%, transparent 68%),
+      radial-gradient(circle at 50% 0%, transparent 20%, rgba(244, 239, 228, 0.08) 21%, rgba(244, 239, 228, 0.08) 23%, transparent 24%, transparent 42%, rgba(244, 239, 228, 0.08) 43%, rgba(244, 239, 228, 0.08) 45%, transparent 46%, transparent 64%, rgba(244, 239, 228, 0.08) 65%, rgba(244, 239, 228, 0.08) 67%, transparent 68%);
+    background-size: 56px 28px;
+    background-position: 0 0, 28px 14px;
+    /* La trama se apaga hacia abajo para que no compita con el contenido. */
+    -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 88%);
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 88%);
+  }
+
+  /* El trazo de pincel que cierra el header: intenso al centro, seco a los bordes. */
+  .sumi-brush {
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(200, 54, 45, 0.75) 10%,
+      rgba(201, 162, 39, 0.9) 48%,
+      rgba(200, 54, 45, 0.75) 88%,
+      transparent 100%
+    );
+  }
+}
+
+/* --- Pastor, la mascota que ladra -----------------------------------------
+   La sacudida del ladrido y el bocadillo. La clase la pone React segun su
+   estado; el CSS solo describe como se ve cada caso. */
+@keyframes pastor-bark {
+  0% { transform: scale(1) rotate(0deg); }
+  20% { transform: scale(1.16) rotate(-7deg); }
+  40% { transform: scale(1.04) rotate(6deg); }
+  60% { transform: scale(1.12) rotate(-4deg); }
+  80% { transform: scale(1.02) rotate(2deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes pastor-bubble {
+  0% { opacity: 0; transform: translate(-6px, 4px) scale(0.7); }
+  35% { opacity: 1; transform: translate(0, 0) scale(1.06); }
+  70% { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(4px, -4px) scale(0.95); }
+}
+
+@layer components {
+  .pastor-barking {
+    animation: pastor-bark 0.7s ease-in-out;
+  }
+
+  .pastor-bubble {
+    animation: pastor-bubble 0.7s ease-out forwards;
+  }
+
+  /* Quien pidio menos movimiento recibe el bocadillo, pero no la sacudida. */
+  @media (prefers-reduced-motion: reduce) {
+    .pastor-barking {
+      animation: none;
+    }
+
+    .pastor-bubble {
+      animation: none;
+      opacity: 1;
+    }
+  }
+}

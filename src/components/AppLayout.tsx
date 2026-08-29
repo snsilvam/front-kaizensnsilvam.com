@@ -6,6 +6,7 @@ import { Separator } from './ui/separator';
 import { useAuth } from '../auth/useAuth';
 import { ModeSwitch } from './ModeSwitch';
 import { UserAvatar } from './UserAvatar';
+import { HabitsHeader } from './HabitsHeader';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -15,7 +16,29 @@ interface AppLayoutProps {
 export function AppLayout({ children, currentPath }: AppLayoutProps) {
   const isIncomePage = currentPath === '/ingresos';
   const isMarketPage = currentPath === '/mercado';
+  // El modo habitos tiene su propio header (tema samurai); el de finanzas no aplica ahi.
+  const isHabitsMode = currentPath === '/habito-1';
   const { signOut } = useAuth();
+
+  if (isHabitsMode) {
+    return (
+      <div className="flex min-h-screen w-full flex-col">
+        <HabitsHeader currentPath={currentPath} />
+
+        <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 sm:px-6">
+          <main className="flex-1 py-12 sm:py-16">{children}</main>
+
+          <footer className="pb-5">
+            <Separator />
+            <div className="flex flex-col gap-1 py-5 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+              <span lang="ja">改善</span>
+              <span>Un día más, una repetición más.</span>
+            </div>
+          </footer>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 sm:px-6">

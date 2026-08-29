@@ -27,7 +27,7 @@ export function Market() {
         <p className="mt-3.5 text-base leading-relaxed text-muted-foreground">
           {budgetId
             ? 'Agrega lo que echas al carro y mira cuánto te queda.'
-            : 'Elige contra cuál presupuesto vas a comprar.'}
+            : 'Elige contra cuál de tus gastos vas a comprar.'}
         </p>
       </div>
 

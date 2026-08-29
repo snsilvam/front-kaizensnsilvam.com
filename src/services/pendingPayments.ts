@@ -32,6 +32,20 @@ export function markPendingPaymentAsPaid(paymentId: string): Promise<unknown> {
   );
 }
 
+/**
+ * PATCH /pending-payments/:id/mark-as-market-budget.
+ *
+ * Deja el gasto en categoria "mercado", que es lo que lo vuelve un presupuesto
+ * de compra. Es como el modulo de mercado deja elegir un gasto ya registrado
+ * sin obligar a crearlo de nuevo.
+ */
+export function markPendingPaymentAsMarketBudget(paymentId: string): Promise<unknown> {
+  return publicRequest<unknown>(
+    `${PENDING_PAYMENTS_URL}/${encodeURIComponent(paymentId)}/mark-as-market-budget`,
+    { method: 'PATCH' },
+  );
+}
+
 /** DELETE /pending-payments/:id. */
 export function deletePendingPayment(paymentId: string): Promise<unknown> {
   return publicRequest<unknown>(`${PENDING_PAYMENTS_URL}/${encodeURIComponent(paymentId)}`, {
@@ -62,6 +76,18 @@ interface ListPendingPaymentsResponse {
  */
 export function listPaidPendingPayments(): Promise<PendingPayment[]> {
   return publicRequest<ListPendingPaymentsResponse>(`${PENDING_PAYMENTS_URL}?paid=true`).then(
+    (response) => response.pending_payments ?? [],
+  );
+}
+
+/**
+ * GET /pending-payments: los gastos que siguen abiertos.
+ *
+ * Es el mismo endpoint de listPaidPendingPayments sin el filtro; aqui interesan
+ * los que todavia se deben, para poder elegir uno como presupuesto de mercado.
+ */
+export function listOpenPendingPayments(): Promise<PendingPayment[]> {
+  return publicRequest<ListPendingPaymentsResponse>(PENDING_PAYMENTS_URL).then(
     (response) => response.pending_payments ?? [],
   );
 }
