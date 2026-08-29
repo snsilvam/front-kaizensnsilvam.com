@@ -1,4 +1,4 @@
-# Kaizen — Frontend
+# Kaizen — Frontend - reactJS PAPU
 
 React + TypeScript + Vite. Consume unicamente la API REST del backend Go.
 Autenticacion con Firebase Authentication (Google). Sin Redux, sin router.
