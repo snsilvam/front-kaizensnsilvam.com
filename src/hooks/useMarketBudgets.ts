@@ -53,7 +53,7 @@ export function useMarketBudgets(): UseMarketBudgets {
         setBudgets(marketBudgets);
         // Los de categoria "mercado" ya vienen en la otra lista; repetirlos
         // aqui haria elegir dos veces lo mismo.
-        setOtherExpenses(openExpenses.filter((expense) => expense.category !== 'mercado'));
+        setOtherExpenses(openExpenses.filter((expense) => expense.category?.code !== 'mercado'));
       })
       .catch((err: unknown) => {
         if (!cancelled) {

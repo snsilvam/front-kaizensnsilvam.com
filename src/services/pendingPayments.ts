@@ -1,19 +1,51 @@
 import { publicRequest } from './api';
 
-const PENDING_PAYMENTS_URL = 'https://kaizensnsilvam-backend-778334880592.us-central1.run.app/pending-payments';
+const API_BASE_URL = 'https://kaizensnsilvam-backend-778334880592.us-central1.run.app';
+const PENDING_PAYMENTS_URL = `${API_BASE_URL}/pending-payments`;
+const PENDING_PAYMENT_CATEGORIES_URL = `${API_BASE_URL}/pending-payment-categories`;
 
-/** Categorias que acepta el backend. Es un conjunto cerrado. */
-export type PendingPaymentCategory = 'mercado' | 'otros';
+/**
+ * Codigo canonico de una categoria. Es lo estable entre entornos: el id cambia
+ * de una base a otra y el nombre lo pueden reescribir, pero el codigo no.
+ * Por eso es lo unico contra lo que se puede comparar en el cliente.
+ */
+export type PendingPaymentCategoryCode = 'mercado' | 'otros';
+
+/**
+ * Una categoria del catalogo. El backend la devuelve entera dentro de cada
+ * gasto, asi que no hace falta cruzarla contra la lista para pintarla.
+ */
+export interface PendingPaymentCategory {
+  id: string;
+  code: PendingPaymentCategoryCode;
+  name: string;
+}
 
 export interface RegisterPendingPaymentInput {
   name: string;
   amount: number;
   dueDate: string;
   /**
-   * Opcional: sin ella el backend la deja en "otros". Con "mercado" el gasto
-   * pendiente ademas queda disponible en /market como presupuesto de compra.
+   * Opcional: sin el, el backend deja el gasto en la categoria "otros". Con la
+   * categoria de codigo "mercado" el gasto ademas queda disponible en /market
+   * como presupuesto de compra. Un id que no este en el catalogo es un 400.
    */
-  category?: PendingPaymentCategory;
+  categoryId?: string;
+}
+
+interface ListPendingPaymentCategoriesResponse {
+  categories: PendingPaymentCategory[] | null;
+}
+
+/**
+ * GET /pending-payment-categories: el catalogo para pintar el selector.
+ *
+ * Es global y de solo lectura, igual para todos los usuarios.
+ */
+export function listPendingPaymentCategories(): Promise<PendingPaymentCategory[]> {
+  return publicRequest<ListPendingPaymentCategoriesResponse>(PENDING_PAYMENT_CATEGORIES_URL).then(
+    (response) => response.categories ?? [],
+  );
 }
 
 /** POST /pending-payments sin variables de entorno ni API key. */
@@ -35,9 +67,9 @@ export function markPendingPaymentAsPaid(paymentId: string): Promise<unknown> {
 /**
  * PATCH /pending-payments/:id/mark-as-market-budget.
  *
- * Deja el gasto en categoria "mercado", que es lo que lo vuelve un presupuesto
- * de compra. Es como el modulo de mercado deja elegir un gasto ya registrado
- * sin obligar a crearlo de nuevo.
+ * Deja el gasto en la categoria "mercado", que es lo que lo vuelve un
+ * presupuesto de compra. Es como el modulo de mercado deja elegir un gasto ya
+ * registrado sin obligar a crearlo de nuevo.
  */
 export function markPendingPaymentAsMarketBudget(paymentId: string): Promise<unknown> {
   return publicRequest<unknown>(
@@ -61,7 +93,11 @@ export interface PendingPayment {
   /** Fecha limite en ISO 8601. */
   dueDate: string;
   paid: boolean;
-  category: PendingPaymentCategory;
+  /**
+   * La categoria ya resuelta. Puede faltar en un gasto guardado antes de que
+   * existiera el catalogo, asi que quien la lea debe contar con eso.
+   */
+  category: PendingPaymentCategory | null;
 }
 
 interface ListPendingPaymentsResponse {
