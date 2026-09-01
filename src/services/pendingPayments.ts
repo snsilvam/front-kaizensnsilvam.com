@@ -23,6 +23,8 @@ export interface PendingPaymentCategory {
 
 export interface RegisterPendingPaymentInput {
   name: string;
+  /** Lugar asociado al gasto, si el usuario desea registrarlo. */
+  place?: string;
   amount: number;
   dueDate: string;
   /**

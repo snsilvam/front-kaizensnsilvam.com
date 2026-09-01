@@ -31,6 +31,7 @@ const DEFAULT_CATEGORY_CODE: PendingPaymentCategoryCode = 'otros';
 export function RegisterPendingPayment() {
   const { categories, error: categoriesError } = usePendingPaymentCategories();
   const [name, setName] = useState('');
+  const [place, setPlace] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -70,6 +71,7 @@ export function RegisterPendingPayment() {
     try {
       await registerPendingPayment({
         name: name.trim(),
+        ...(place.trim() ? { place: place.trim() } : {}),
         amount: numericAmount,
         dueDate: date.toISOString(),
         // Sin catalogo no se manda ninguna: el backend la deja en "otros".
@@ -81,6 +83,7 @@ export function RegisterPendingPayment() {
           : 'Gasto pendiente registrado correctamente.',
       );
       setName('');
+      setPlace('');
       setAmount('');
       setDueDate('');
       setCategoryId('');
@@ -161,6 +164,16 @@ export function RegisterPendingPayment() {
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Ej. Internet"
                 required
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="pending-payment-place">Lugar (opcional)</Label>
+              <Input
+                id="pending-payment-place"
+                value={place}
+                onChange={(event) => setPlace(event.target.value)}
+                placeholder="Ej. Supermercado del barrio"
               />
             </div>
 

@@ -1,12 +1,15 @@
+import { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
+import { ConfirmMarketBudgetDialog } from './ConfirmMarketBudgetDialog';
 import { ErrorMessage } from './ErrorMessage';
 import { Skeleton } from './ui/skeleton';
 import { formatDate, formatMoney } from '../services/format';
 import { useMarketBudgets } from '../hooks/useMarketBudgets';
 import { MARKET_CURRENCY } from '../services/market';
+import type { PendingPayment } from '../services/pendingPayments';
 
 /**
  * Primera pantalla del modulo: contra cual gasto voy a comprar.
@@ -20,12 +23,24 @@ export function MarketBudgetPicker() {
   const { budgets, otherExpenses, loading, error, actionError, choosingId, reload, chooseExpense } =
     useMarketBudgets();
 
+  // El gasto elegido espera aqui hasta que el usuario confirme: la categoria
+  // "mercado" no se puede deshacer, asi que no se escribe con un solo clic.
+  const [expenseToChoose, setExpenseToChoose] = useState<PendingPayment | null>(null);
+
   function openBudget(budgetId: string) {
     window.location.href = `/mercado?id=${encodeURIComponent(budgetId)}`;
   }
 
-  async function choose(paymentId: string) {
-    if (await chooseExpense(paymentId)) openBudget(paymentId);
+  async function confirmChoice() {
+    if (!expenseToChoose) return;
+
+    if (await chooseExpense(expenseToChoose.id)) {
+      openBudget(expenseToChoose.id);
+      return;
+    }
+    // Fallo la peticion: se cierra el dialogo para que se vea el actionError
+    // que ya quedo pintado sobre la lista.
+    setExpenseToChoose(null);
   }
 
   if (loading) {
@@ -146,7 +161,7 @@ export function MarketBudgetPicker() {
                   size="sm"
                   className="shrink-0"
                   disabled={choosingId !== null}
-                  onClick={() => choose(expense.id)}
+                  onClick={() => setExpenseToChoose(expense)}
                 >
                   {choosingId === expense.id ? 'Preparando...' : 'Comprar con este'}
                 </Button>
@@ -155,6 +170,14 @@ export function MarketBudgetPicker() {
           </ul>
         </section>
       )}
+
+      <ConfirmMarketBudgetDialog
+        open={expenseToChoose !== null}
+        itemName={expenseToChoose?.name ?? 'este gasto'}
+        isChoosing={choosingId !== null}
+        onCancel={() => setExpenseToChoose(null)}
+        onConfirm={confirmChoice}
+      />
     </>
   );
 }
