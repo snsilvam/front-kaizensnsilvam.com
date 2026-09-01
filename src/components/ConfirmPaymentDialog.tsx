@@ -1,4 +1,6 @@
 import { CircleCheck } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import type { PaymentMethod } from '../services/pendingPayments';
 import { Button } from './ui/button';
 
 interface ConfirmPaymentDialogProps {
@@ -6,7 +8,7 @@ interface ConfirmPaymentDialogProps {
   itemName: string;
   isPaying?: boolean;
   onCancel: () => void;
-  onConfirm: () => void | Promise<void>;
+  onConfirm: (paymentMethod: PaymentMethod) => void | Promise<void>;
 }
 
 export function ConfirmPaymentDialog({
@@ -16,6 +18,12 @@ export function ConfirmPaymentDialog({
   onCancel,
   onConfirm,
 }: ConfirmPaymentDialogProps) {
+  const [paymentMethod, setPaymentMethod] = useState<'digital' | 'cash' | null>(null);
+
+  useEffect(() => {
+    if (!open) setPaymentMethod(null);
+  }, [open]);
+
   if (!open) return null;
 
   return (
@@ -36,11 +44,36 @@ export function ConfirmPaymentDialog({
         <p id="confirm-payment-description" className="mt-2 text-sm leading-relaxed text-muted-foreground">
           Marcaremos <span className="font-medium text-foreground">{itemName}</span> como pagado y dejará de aparecer en tus pendientes.
         </p>
+        <fieldset className="mt-5">
+          <legend className="text-sm font-medium text-foreground">¿Cómo pagaste?</legend>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            <Button
+              type="button"
+              variant={paymentMethod === 'digital' ? 'default' : 'outline'}
+              onClick={() => setPaymentMethod('digital')}
+              disabled={isPaying}
+            >
+              Pago digital
+            </Button>
+            <Button
+              type="button"
+              variant={paymentMethod === 'cash' ? 'default' : 'outline'}
+              onClick={() => setPaymentMethod('cash')}
+              disabled={isPaying}
+            >
+              Efectivo
+            </Button>
+          </div>
+        </fieldset>
         <div className="mt-6 flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isPaying}>
             Cancelar
           </Button>
-          <Button type="button" onClick={onConfirm} disabled={isPaying}>
+          <Button
+            type="button"
+            onClick={() => paymentMethod && onConfirm(paymentMethod)}
+            disabled={isPaying || paymentMethod === null}
+          >
             {isPaying ? 'Marcando como pagado...' : 'Sí, ya lo pagué'}
           </Button>
         </div>

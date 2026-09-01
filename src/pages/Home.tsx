@@ -13,7 +13,7 @@ import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { ConfirmPaymentDialog } from '../components/ConfirmPaymentDialog';
 import { useDashboard } from '../hooks/useDashboard';
 import { formatDate, formatMoney, planStatusLabel } from '../services/format';
-import { deletePendingPayment, markPendingPaymentAsPaid } from '../services/pendingPayments';
+import { deletePendingPayment, markPendingPaymentAsPaid, type PaymentMethod } from '../services/pendingPayments';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useAuth } from '../auth/useAuth';
@@ -26,12 +26,12 @@ export function Home() {
   const [pendingToDelete, setPendingToDelete] = useState<string | null>(null);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const { user } = useAuth();
-  const handleMarkAsPaid = async (paymentId: string) => {
+  const handleMarkAsPaid = async (paymentId: string, paymentMethod: PaymentMethod) => {
     setPayingId(paymentId);
     setPaymentError(null);
 
     try {
-      await markPendingPaymentAsPaid(paymentId);
+      await markPendingPaymentAsPaid(paymentId, paymentMethod);
       reload();
     } catch (requestError) {
       setPaymentError(
@@ -195,9 +195,9 @@ export function Home() {
         itemName={data.pending.find((payment) => payment.id === pendingToPay)?.title ?? 'este gasto'}
         isPaying={payingId === pendingToPay}
         onCancel={() => setPendingToPay(null)}
-        onConfirm={async () => {
+        onConfirm={async (paymentMethod) => {
           if (!pendingToPay) return;
-          await handleMarkAsPaid(pendingToPay);
+          await handleMarkAsPaid(pendingToPay, paymentMethod);
           setPendingToPay(null);
         }}
       />

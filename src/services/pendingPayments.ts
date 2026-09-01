@@ -10,6 +10,7 @@ const PENDING_PAYMENT_CATEGORIES_URL = `${API_BASE_URL}/pending-payment-categori
  * Por eso es lo unico contra lo que se puede comparar en el cliente.
  */
 export type PendingPaymentCategoryCode = 'mercado' | 'otros';
+export type PaymentMethod = 'digital' | 'cash';
 
 /**
  * Una categoria del catalogo. El backend la devuelve entera dentro de cada
@@ -59,10 +60,13 @@ export function registerPendingPayment(input: RegisterPendingPaymentInput): Prom
 }
 
 /** PATCH /pending-payments/:id/mark-as-paid. */
-export function markPendingPaymentAsPaid(paymentId: string): Promise<unknown> {
+export function markPendingPaymentAsPaid(paymentId: string, paymentMethod?: PaymentMethod): Promise<unknown> {
   return publicRequest<unknown>(
     `${PENDING_PAYMENTS_URL}/${encodeURIComponent(paymentId)}/mark-as-paid`,
-    { method: 'PATCH' },
+    {
+      method: 'PATCH',
+      ...(paymentMethod ? { body: JSON.stringify({ paymentMethod }) } : {}),
+    },
   );
 }
 
@@ -91,6 +95,7 @@ export function deletePendingPayment(paymentId: string): Promise<unknown> {
 export interface PendingPayment {
   id: string;
   name: string;
+  paymentMethod?: PaymentMethod;
   amount: number;
   /** Fecha limite en ISO 8601. */
   dueDate: string;
