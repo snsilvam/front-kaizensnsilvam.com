@@ -89,12 +89,17 @@ export function Home() {
 
          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1
-              id="dashboard-title"
-              className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
-            >
-              Resumen financiero
-            </h1>
+            <div className="flex items-center gap-3">
+              <Button type="button" onClick={() => { window.location.href = '/gastos'; }}>
+                Registrar gasto pendiente
+              </Button>
+              <h1
+                id="dashboard-title"
+                className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl"
+              >
+                Resumen financiero
+              </h1>
+            </div>
 
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
               Decide con claridad qué puedes gastar y mantén el control de tu plan.
@@ -196,12 +201,6 @@ export function Home() {
           setPendingToPay(null);
         }}
       />
-
-    <div className="mt-14 flex justify-center">
-      <Button type="button" onClick={() => { window.location.href = '/gastos'; }}>
-        CREAR UN GASTO +
-      </Button>
-    </div>
     </>
   );
 }

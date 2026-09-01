@@ -1,10 +1,15 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Trophy } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2, Trophy } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
+import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import { formatDate, formatMoney } from '../services/format';
-import { listPaidPendingPayments, type PendingPayment } from '../services/pendingPayments';
+import {
+  deletePendingPayment,
+  listPaidPendingPayments,
+  type PendingPayment,
+} from '../services/pendingPayments';
 
 interface PaidPaymentsSectionProps {
   currency: string;
@@ -21,6 +26,9 @@ export function PaidPaymentsSection({ currency }: PaidPaymentsSectionProps) {
   const [items, setItems] = useState<PendingPayment[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [paymentToDelete, setPaymentToDelete] = useState<PendingPayment | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -44,6 +52,29 @@ export function PaidPaymentsSection({ currency }: PaidPaymentsSectionProps) {
     setOpen(next);
     // Se carga la primera vez que se abre, y se reintenta si quedó en error.
     if (next && (items === null || error)) void load();
+  }
+
+  /**
+   * Borra el gasto y lo quita de la tabla sin volver a pedir la lista: esta
+   * seccion es la unica que la tiene, asi que basta con sacarlo del estado.
+   */
+  async function handleDelete(paymentId: string) {
+    setDeletingId(paymentId);
+    setDeleteError(null);
+
+    try {
+      await deletePendingPayment(paymentId);
+      setItems((current) => (current ?? []).filter((payment) => payment.id !== paymentId));
+      setPaymentToDelete(null);
+    } catch (requestError) {
+      setDeleteError(
+        requestError instanceof Error
+          ? requestError.message
+          : 'No fue posible eliminar el gasto pagado.',
+      );
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   const total = (items ?? []).reduce((sum, item) => sum + item.amount, 0);
@@ -88,47 +119,82 @@ export function PaidPaymentsSection({ currency }: PaidPaymentsSectionProps) {
             ) : !items || items.length === 0 ? (
               <p className="text-sm text-muted-foreground">Todavía no has pagado ningún gasto.</p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left">
-                      <th className="py-2 pr-3 font-semibold text-muted-foreground">Nombre</th>
-                      <th className="py-2 pr-3 text-right font-semibold text-muted-foreground">
-                        Monto
-                      </th>
-                      <th className="py-2 text-right font-semibold text-muted-foreground">
-                        Fecha límite
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((payment) => (
-                      <tr key={payment.id} className="border-b border-border">
-                        <td className="py-3 pr-3 font-medium text-foreground">{payment.name}</td>
-                        <td className="py-3 pr-3 text-right whitespace-nowrap text-foreground">
-                          {formatMoney(payment.amount, currency)}
-                        </td>
-                        <td className="py-3 text-right whitespace-nowrap text-xs text-muted-foreground">
-                          {formatDate(payment.dueDate)}
-                        </td>
+              <>
+                {deleteError && <p className="mb-3 text-sm text-destructive">{deleteError}</p>}
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-left">
+                        <th className="py-2 pr-3 font-semibold text-muted-foreground">Nombre</th>
+                        <th className="py-2 pr-3 text-right font-semibold text-muted-foreground">
+                          Monto
+                        </th>
+                        <th className="py-2 pr-3 text-right font-semibold text-muted-foreground">
+                          Fecha límite
+                        </th>
+                        <th className="py-2 text-right font-semibold text-muted-foreground">
+                          <span className="sr-only">Acciones</span>
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td className="py-3 pr-3 font-semibold text-foreground">Total pagado</td>
-                      <td className="py-3 pr-3 text-right font-bold whitespace-nowrap text-primary">
-                        {formatMoney(total, currency)}
-                      </td>
-                      <td />
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {items.map((payment) => (
+                        <tr key={payment.id} className="border-b border-border">
+                          <td className="py-3 pr-3 font-medium text-foreground">{payment.name}</td>
+                          <td className="py-3 pr-3 text-right whitespace-nowrap text-foreground">
+                            {formatMoney(payment.amount, currency)}
+                          </td>
+                          <td className="py-3 pr-3 text-right whitespace-nowrap text-xs text-muted-foreground">
+                            {formatDate(payment.dueDate)}
+                          </td>
+                          <td className="py-3 text-right">
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon-sm"
+                              aria-label={`Eliminar ${payment.name}`}
+                              title="Eliminar"
+                              disabled={deletingId === payment.id}
+                              onClick={() => {
+                                setDeleteError(null);
+                                setPaymentToDelete(payment);
+                              }}
+                            >
+                              <Trash2 aria-hidden="true" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td className="py-3 pr-3 font-semibold text-foreground">Total pagado</td>
+                        <td className="py-3 pr-3 text-right font-bold whitespace-nowrap text-primary">
+                          {formatMoney(total, currency)}
+                        </td>
+                        <td />
+                        <td />
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
       )}
+
+      <ConfirmDeleteDialog
+        open={paymentToDelete !== null}
+        itemName={paymentToDelete?.name ?? 'este gasto pagado'}
+        itemType="gasto"
+        isDeleting={deletingId === paymentToDelete?.id}
+        onCancel={() => setPaymentToDelete(null)}
+        onConfirm={() => {
+          if (!paymentToDelete) return;
+          void handleDelete(paymentToDelete.id);
+        }}
+      />
     </>
   );
 }
