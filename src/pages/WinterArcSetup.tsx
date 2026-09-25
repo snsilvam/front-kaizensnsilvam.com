@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { WinterArcLayout } from '../components/WinterArcLayout';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -36,12 +37,13 @@ export function WinterArcSetup() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const arc = await setupWinterArc([...selected]);
-      window.location.href = `/winter-arc?id=${encodeURIComponent(arc.id)}`;
+      await setupWinterArc([...selected]);
+      // El inicio del modulo abre el reto mas reciente: el que se acaba de crear.
+      window.location.href = '/winter-arc';
     } catch (err: unknown) {
       setSubmitError(
         err instanceof ApiError && err.status === 409
-          ? 'Ya tienes un Winter Arc en curso.'
+          ? 'Ya tienes un Winter Arc en curso. Búscalo en el inicio del Winter Arc.'
           : err instanceof Error
             ? err.message
             : 'No pudimos iniciar el Winter Arc.',
@@ -51,8 +53,8 @@ export function WinterArcSetup() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-background px-4 py-8">
-      <main className="w-full max-w-md" aria-labelledby="winter-arc-setup-title">
+    <WinterArcLayout>
+      <section className="mx-auto w-full max-w-md" aria-labelledby="winter-arc-setup-title">
         <Card>
           <CardHeader>
             <CardTitle id="winter-arc-setup-title" className="text-2xl font-bold tracking-[-0.04em]">
@@ -130,7 +132,7 @@ export function WinterArcSetup() {
             )}
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </section>
+    </WinterArcLayout>
   );
 }

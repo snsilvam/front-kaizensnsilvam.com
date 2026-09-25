@@ -1,4 +1,4 @@
-import { LogOut } from 'lucide-react';
+import { LogOut, Snowflake } from 'lucide-react';
 import { Button } from './ui/button';
 import { ModeSwitch } from './ModeSwitch';
 import { UserAvatar } from './UserAvatar';
@@ -62,6 +62,20 @@ export function HabitsHeader({ currentPath }: HabitsHeaderProps) {
           </p>
 
           <ModeSwitch currentPath={currentPath} tone="sumi" />
+
+          {/* El Winter Arc se alimenta de las repeticiones que se registran aqui. */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2 border-[#7cc4e8]/40 bg-[#f4efe4]/5 text-[#f4efe4]/80 hover:border-[#7cc4e8]/70 hover:bg-[#f4efe4]/10 hover:text-[#f4efe4]"
+            aria-label="Ir al Winter Arc"
+            title="Ir al Winter Arc"
+            onClick={() => { window.location.href = '/winter-arc'; }}
+          >
+            <Snowflake aria-hidden="true" className="text-[#7cc4e8]" />
+            <span className="hidden sm:inline">Winter Arc</span>
+          </Button>
 
           <span className="grid place-items-center rounded-full p-0.5 ring-1 ring-[#c9a227]/50">
             <UserAvatar />

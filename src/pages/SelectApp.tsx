@@ -1,4 +1,4 @@
-import { ArrowRight, Wallet } from 'lucide-react';
+import { ArrowRight, Snowflake, Wallet } from 'lucide-react';
 import { useAuth } from '../auth/useAuth';
 import KaizenLogo from '../components/KaizenLogo';
 import { firstNameOf } from '../services/format';
@@ -16,11 +16,16 @@ export function SelectApp() {
     window.location.href = '/habits';
   }
 
+  function useWinterArc() {
+    completeAppSelection();
+    window.location.href = '/winter-arc';
+  }
+
   return (
     <div className="relative grid min-h-screen place-items-center overflow-hidden bg-background px-4 py-10">
       <div className="absolute -top-40 left-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-primary/8 blur-3xl" aria-hidden="true" />
 
-      <main className="relative w-full max-w-3xl" aria-labelledby="select-app-title">
+      <main className="relative w-full max-w-5xl" aria-labelledby="select-app-title">
         <div className="mb-8 flex flex-col items-center text-center">
           <KaizenLogo
             width={64}
@@ -34,7 +39,7 @@ export function SelectApp() {
           <p className="mt-2 text-muted-foreground">Elige una aplicación. Puedes cambiar cuando quieras.</p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <button
             type="button"
             onClick={useKaizen}
@@ -73,6 +78,28 @@ export function SelectApp() {
             </span>
             <span className="relative mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#c9a227]">
               Entrar al dojo
+              <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={useWinterArc}
+            className="group relative isolate flex flex-col overflow-hidden rounded-3xl bg-[#0b1624] bg-[radial-gradient(120%_120%_at_100%_0%,rgba(124,196,232,0.3)_0%,rgba(124,196,232,0)_60%)] p-6 text-left shadow-soft ring-1 ring-[#7cc4e8]/25 transition-all outline-none hover:-translate-y-0.5 hover:shadow-lg hover:ring-[#7cc4e8]/60 focus-visible:ring-3 focus-visible:ring-[#7cc4e8]/60 sm:p-7"
+          >
+            <span
+              aria-hidden="true"
+              className="grid size-12 place-items-center rounded-full bg-[#cfe8f5] text-[#0b1624] shadow-lg shadow-[#7cc4e8]/30"
+            >
+              <Snowflake className="size-6" />
+            </span>
+            <span className="mt-6 text-xs font-semibold tracking-[0.12em] text-[#7cc4e8] uppercase">Reto</span>
+            <span className="mt-1 text-2xl font-bold tracking-tight text-[#eef7fc]">Winter Arc</span>
+            <span className="mt-2 text-sm leading-relaxed text-[#eef7fc]/65">
+              90 días sin romper tus reglas. Tres días fallados seguidos y la llama se apaga.
+            </span>
+            <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#7cc4e8]">
+              Aceptar el reto
               <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
             </span>
           </button>

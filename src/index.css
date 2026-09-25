@@ -189,3 +189,38 @@
     }
   }
 }
+
+/* --- Winter Arc, la llama de supervivencia --------------------------------
+   Sana arde con un vaivén suave; con 2 fallos seguidos parpadea como si se
+   fuera a apagar. El color y el tamaño los pone Tailwind en SurvivalFlame. */
+@keyframes winter-flame-burn {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.08) rotate(-3deg); }
+}
+
+@keyframes winter-flame-dying {
+  0%, 100% { opacity: 0.9; }
+  15% { opacity: 0.2; }
+  30% { opacity: 0.75; }
+  55% { opacity: 0.1; }
+  75% { opacity: 0.55; }
+}
+
+@layer components {
+  .winter-flame-burning {
+    transform-origin: 50% 100%;
+    animation: winter-flame-burn 2.4s ease-in-out infinite;
+  }
+
+  .winter-flame-dying {
+    animation: winter-flame-dying 1.8s linear infinite;
+  }
+
+  /* Sin movimiento, el estado se sigue leyendo por color y tamaño. */
+  @media (prefers-reduced-motion: reduce) {
+    .winter-flame-burning,
+    .winter-flame-dying {
+      animation: none;
+    }
+  }
+}

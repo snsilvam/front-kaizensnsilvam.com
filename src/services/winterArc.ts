@@ -16,6 +16,14 @@ export function setupWinterArc(habitIds: string[]): Promise<WinterArc> {
   );
 }
 
+/**
+ * GET /api/winter-arc/current: el grid del reto más reciente del usuario, en
+ * cualquier estado. Responde 404 (ApiError) si nunca inició uno.
+ */
+export function getCurrentWinterArc(): Promise<WinterArcGrid> {
+  return request<WinterArcGrid>('/api/winter-arc/current', {}, false);
+}
+
 /** GET /api/winter-arc/:id/grid: los 90 días del reto en orden. */
 export function getWinterArcGrid(winterArcId: string): Promise<WinterArcGrid> {
   return request<WinterArcGrid>(`/api/winter-arc/${encodeURIComponent(winterArcId)}/grid`, {}, false);

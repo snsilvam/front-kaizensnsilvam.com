@@ -3,8 +3,10 @@ import { ErrorMessage } from './ErrorMessage';
 import { Alert, AlertDescription } from './ui/alert';
 import { Button } from './ui/button';
 import { Skeleton } from './ui/skeleton';
+import { SurvivalFlame } from './SurvivalFlame';
 import { useWinterArcGrid } from '../hooks/useWinterArcGrid';
 import { cn } from '../lib/utils';
+import { ApiError } from '../services/api';
 import { syncWinterArcToday } from '../services/winterArc';
 import type { WinterArcDay } from '../types/winterArc';
 
@@ -18,6 +20,9 @@ interface WinterArcGridProps {
  * Los 90 días del reto al estilo GitHub contributions: una columna por semana,
  * de lunes a domingo. Pasado y futuro se deciden con el `today` del servidor,
  * no con el reloj del navegador.
+ *
+ * Si el reto se perdió (3 días fallados seguidos, lo decide el backend) la
+ * llama queda en cenizas, el grid pasa a grises y ya no se puede sincronizar.
  */
 export function WinterArcGrid({ winterArcId }: WinterArcGridProps) {
   const grid = useWinterArcGrid(winterArcId);
@@ -33,9 +38,19 @@ export function WinterArcGrid({ winterArcId }: WinterArcGridProps) {
     return <Skeleton className="h-36 w-full rounded-lg" aria-label="Cargando Winter Arc" />;
   }
 
-  const { days, today, start_date: startDate } = grid.data;
+  const {
+    days,
+    today,
+    start_date: startDate,
+    end_date: endDate,
+    consecutive_failed_days: consecutiveFailedDays,
+    failed_on_day: failedOnDay,
+  } = grid.data;
+  const failed = grid.data.status === 'failed';
   const todayDay = days.find((day) => day.date === today);
   const successes = days.filter((day) => day.is_successful).length;
+  // Con el reto perdido el error de sincronizar ya no aporta nada: lo dice la pantalla.
+  const alertMessage = failed ? grid.error : (syncError ?? grid.error);
 
   async function syncToday() {
     setSyncing(true);
@@ -45,6 +60,9 @@ export function WinterArcGrid({ winterArcId }: WinterArcGridProps) {
       grid.reload();
     } catch (err: unknown) {
       setSyncError(err instanceof Error ? err.message : 'No pudimos sincronizar el día.');
+      // 409: el reto pudo perderse con la vista abierta (p. ej. pasó la
+      // medianoche). Recargar trae el estado real del backend.
+      if (err instanceof ApiError && err.status === 409) grid.reload();
     } finally {
       setSyncing(false);
     }
@@ -52,47 +70,72 @@ export function WinterArcGrid({ winterArcId }: WinterArcGridProps) {
 
   return (
     <section className="grid gap-4" aria-label="Progreso del Winter Arc">
-      <p className="font-mono text-sm text-muted-foreground">
-        {todayDay ? `día ${todayDay.day_number}/${days.length}` : `${startDate} → ${grid.data.end_date}`} · {successes} cumplidos
-      </p>
+      {failed ? (
+        <div className="grid gap-1">
+          <p className="flex items-center gap-2 text-lg font-semibold tracking-[-0.02em]">
+            <SurvivalFlame consecutiveFailedDays={consecutiveFailedDays} extinguished />
+            {failedOnDay ? `El Winter Arc terminó en el Día ${failedOnDay}.` : 'El Winter Arc terminó.'}
+          </p>
+          <p className="font-mono text-sm text-muted-foreground">
+            {successes} de {days.length} días cumplidos
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <p className="flex items-center gap-2 text-lg font-semibold tracking-[-0.02em]">
+            {todayDay ? `Día ${todayDay.day_number} de ${days.length}` : `${startDate} → ${endDate}`}
+            <SurvivalFlame consecutiveFailedDays={consecutiveFailedDays} />
+          </p>
+          <p className="font-mono text-sm text-muted-foreground">{successes} cumplidos</p>
+        </div>
+      )}
 
-      <div className="overflow-x-auto">
-        <ol className="grid w-max grid-flow-col grid-rows-7 gap-1">
-          {/* Huecos para que el día 1 caiga en su día de la semana. */}
-          {Array.from({ length: mondayOffset(startDate) }, (_, i) => (
-            <li key={`pad-${i}`} aria-hidden="true" className="size-4" />
-          ))}
-          {days.map((day) => {
-            const state = dayState(day, today);
-            return (
-              <li
-                key={day.day_number}
-                title={`Día ${day.day_number} · ${day.date} · ${STATE_LABEL[state]}`}
-                aria-label={`Día ${day.day_number}, ${day.date}: ${STATE_LABEL[state]}`}
-                className={cn(
-                  'size-4 rounded-[3px]',
-                  STATE_CLASS[state],
-                  day.date === today && 'ring-2 ring-foreground ring-offset-1 ring-offset-background',
-                )}
-              />
-            );
-          })}
-        </ol>
+      {/* El cementerio: al perder el reto todo el grid queda en grises. */}
+      <div className={cn('grid gap-4 transition-[filter,opacity] duration-700', failed && 'opacity-60 grayscale')}>
+        <div className="overflow-x-auto">
+          <ol className="grid w-max grid-flow-col grid-rows-7 gap-1">
+            {/* Huecos para que el día 1 caiga en su día de la semana. */}
+            {Array.from({ length: mondayOffset(startDate) }, (_, i) => (
+              <li key={`pad-${i}`} aria-hidden="true" className="size-4" />
+            ))}
+            {days.map((day) => {
+              const state = dayState(day, today);
+              return (
+                <li
+                  key={day.day_number}
+                  title={`Día ${day.day_number} · ${day.date} · ${STATE_LABEL[state]}`}
+                  aria-label={`Día ${day.day_number}, ${day.date}: ${STATE_LABEL[state]}`}
+                  className={cn(
+                    'size-4 rounded-[3px]',
+                    STATE_CLASS[state],
+                    day.date === today && !failed && 'ring-2 ring-foreground ring-offset-1 ring-offset-background',
+                  )}
+                />
+              );
+            })}
+          </ol>
+        </div>
+
+        <ul className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+          <Legend className={STATE_CLASS.future} label="futuro" />
+          <Legend className={STATE_CLASS.success} label="cumplido" />
+          <Legend className={STATE_CLASS.failed} label="fallado" />
+        </ul>
       </div>
 
-      <ul className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-        <Legend className={STATE_CLASS.future} label="futuro" />
-        <Legend className={STATE_CLASS.success} label="cumplido" />
-        <Legend className={STATE_CLASS.failed} label="fallado" />
-      </ul>
-
-      {(syncError ?? grid.error) && (
+      {alertMessage && (
         <Alert variant="destructive">
-          <AlertDescription>{syncError ?? grid.error}</AlertDescription>
+          <AlertDescription>{alertMessage}</AlertDescription>
         </Alert>
       )}
 
-      <Button type="button" variant="outline" className="w-fit" onClick={syncToday} disabled={syncing || !todayDay}>
+      <Button
+        type="button"
+        variant="outline"
+        className="w-fit"
+        onClick={syncToday}
+        disabled={failed || syncing || !todayDay}
+      >
         {syncing ? 'Sincronizando...' : 'Sincronizar Hoy'}
       </Button>
     </section>
