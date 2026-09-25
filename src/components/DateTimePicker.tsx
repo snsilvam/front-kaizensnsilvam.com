@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { CalendarDays } from 'lucide-react';
 
 interface DateTimePickerProps {
   id: string;
@@ -16,7 +17,7 @@ function dateValue(date: Date): string {
 }
 
 function displayValue(value: string): string {
-  if (!value) return 'Selecciona fecha y hora';
+  if (!value) return 'Elige fecha y hora';
 
   const [date, time = '00:00'] = value.split('T');
   const [year, month, day] = date.split('-');
@@ -58,15 +59,16 @@ export function DateTimePicker({ id, value, onChange }: DateTimePickerProps) {
         id={id}
         type="button"
         onClick={() => setIsOpen((open) => !open)}
-        className="flex h-8 w-full items-center rounded-lg border border-input bg-transparent px-2.5 py-1 text-left text-sm text-foreground transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className={`flex h-10 w-full items-center gap-2 rounded-lg border border-input bg-card px-3 py-1 text-left text-base shadow-xs transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm ${value ? 'text-foreground' : 'text-muted-foreground'}`}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
       >
-        {displayValue(value)}
+        <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+        <span className="truncate">{displayValue(value)}</span>
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-2 w-80 rounded-lg border border-border bg-popover p-3 shadow-lg" role="dialog" aria-label="Seleccionar fecha límite">
+        <div className="absolute z-30 mt-2 w-[min(20rem,calc(100vw-2.5rem))] rounded-2xl border border-border bg-popover p-3 shadow-xl" role="dialog" aria-label="Seleccionar fecha límite">
           <div className="mb-3 flex items-center justify-between">
             <button
               type="button"

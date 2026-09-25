@@ -4,6 +4,7 @@ import type { Dashboard, PlanStatus } from '../types/dashboard';
 
 interface BackendDashboard {
   availableToday: number;
+  availableAfterCommitments: number;
   nextIncome: {
     name: string;
     amount: number;
@@ -27,12 +28,14 @@ export function getDashboard(): Promise<Dashboard> {
 
   return request<BackendDashboard>('/dashboard', {}, false).then((backend) => ({
     availableMoney: backend.availableToday,
+    availableAfterCommitments: backend.availableAfterCommitments,
     currency: 'COP',
     nextIncome: backend.nextIncome
       ? {
           amount: backend.nextIncome.amount,
           date: backend.nextIncome.date,
           source: backend.nextIncome.name,
+          daysRemaining: backend.nextIncome.daysRemaining,
         }
       : null,
     planStatus: backend.planStatus,

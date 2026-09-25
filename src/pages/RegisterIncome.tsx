@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { ArrowRight, CircleCheck } from 'lucide-react';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -8,10 +9,16 @@ import { Skeleton } from '../components/ui/skeleton';
 import { DateTimePicker } from '../components/DateTimePicker';
 import { IncomeTable } from '../components/IncomeTable';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
+import { MoneyInput, parseMoney } from '../components/MoneyInput';
+import { PageHeader } from '../components/PageHeader';
+import { SuggestionChips } from '../components/SuggestionChips';
 import { useIncomes } from '../hooks/useIncomes';
 import { deleteIncome, registerIncome } from '../services/incomes';
 
 const CURRENCY = 'COP';
+
+/** Los nombres que mas se repiten: un toque en vez de escribirlos. */
+const NAME_SUGGESTIONS = ['Salario', 'Quincena', 'Prima', 'Freelance', 'Venta'];
 
 export function RegisterIncome() {
   const [name, setName] = useState('');
@@ -46,7 +53,7 @@ export function RegisterIncome() {
     setError('');
     setSuccess('');
 
-    const numericAmount = Number(amount.replace(/\./g, ''));
+    const numericAmount = parseMoney(amount);
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       setError('Ingresa un monto mayor que cero.');
       return;
@@ -54,7 +61,7 @@ export function RegisterIncome() {
 
     const date = new Date(paymentDate);
     if (Number.isNaN(date.getTime())) {
-      setError('Ingresa una fecha de pago válida.');
+      setError('Elige la fecha en que recibes el dinero.');
       return;
     }
 
@@ -65,7 +72,7 @@ export function RegisterIncome() {
         amount: numericAmount,
         date: date.toISOString(),
       });
-      setSuccess('Ingreso registrado correctamente.');
+      setSuccess('Ingreso registrado. Tu resumen ya lo tiene en cuenta.');
       setName('');
       setAmount('');
       setPaymentDate('');
@@ -78,110 +85,106 @@ export function RegisterIncome() {
   }
 
   return (
-    <section className="mx-auto max-w-xl" aria-labelledby="register-income-title">
-      <div className="mb-8">
-        <p className="mb-2.5 text-xs font-bold tracking-[0.1em] text-primary uppercase">Organiza tus ingresos</p>
-        <h1 id="register-income-title" className="font-heading text-3xl font-bold tracking-[-0.055em] text-foreground sm:text-4xl">
-          Registrar ingreso
-        </h1>
-        <p className="mt-3.5 text-base leading-relaxed text-muted-foreground">
-          Registra el dinero que recibirás para mantener tu plan actualizado.
-        </p>
-      </div>
+    <section aria-labelledby="register-income-title">
+      <PageHeader
+        id="register-income-title"
+        eyebrow="Ingresos"
+        title="Registrar ingreso"
+        description="Anota el dinero que recibes o vas a recibir. Con la fecha sabremos cuántos días faltan para tu próximo pago."
+      />
 
-      <Card className="overflow-visible">
-        <CardHeader>
-          <CardTitle>Datos del ingreso</CardTitle>
-          <CardDescription>Completa la información para guardarla.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="flex flex-col gap-5" onSubmit={submit}>
-            <div className="grid gap-2">
-              <Label htmlFor="income-name">Nombre</Label>
-              <Input
-                id="income-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="Ej. Salario"
-                required
-              />
-            </div>
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <Card className="overflow-visible">
+          <CardContent>
+            <form className="flex flex-col gap-6" onSubmit={submit}>
+              <div className="grid gap-2.5">
+                <Label htmlFor="income-amount" className="text-base font-semibold">
+                  ¿Cuánto recibes?
+                </Label>
+                <MoneyInput
+                  id="income-amount"
+                  size="lg"
+                  value={amount}
+                  onChange={setAmount}
+                  placeholder="2.500.000"
+                  required
+                />
+              </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="income-amount">Monto</Label>
-              <Input
-                id="income-amount"
-                type="text"
-                value={amount}
-                onChange={(event) => {
-                  const digits = event.target.value.replace(/\D/g, '');
-                  setAmount(digits ? Number(digits).toLocaleString('es-CO') : '');
-                }}
-                inputMode="numeric"
-                placeholder="Ej. 2.500.000"
-                required
-              />
-            </div>
+              <div className="grid gap-2.5">
+                <Label htmlFor="income-name">¿De dónde viene?</Label>
+                <Input
+                  id="income-name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Ej. Salario"
+                  required
+                />
+                <SuggestionChips options={NAME_SUGGESTIONS} value={name} onPick={setName} />
+              </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="income-payment-date">Fecha de pago</Label>
-              <DateTimePicker
-                id="income-payment-date"
-                value={paymentDate}
-                onChange={setPaymentDate}
-              />
-            </div>
+              <div className="grid gap-2.5">
+                <Label htmlFor="income-payment-date">¿Cuándo lo recibes?</Label>
+                <DateTimePicker id="income-payment-date" value={paymentDate} onChange={setPaymentDate} />
+              </div>
 
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            {success && (
-              <Alert>
-                <AlertDescription>{success}</AlertDescription>
-              </Alert>
-            )}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              {success && (
+                <Alert variant="success">
+                  <CircleCheck aria-hidden="true" />
+                  <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+                    {success}
+                    <a href="/" className="inline-flex items-center gap-1 font-semibold no-underline">
+                      Ver resumen <ArrowRight aria-hidden="true" className="size-3.5" />
+                    </a>
+                  </AlertDescription>
+                </Alert>
+              )}
 
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Guardando...' : 'Registrar ingreso'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Tus ingresos</CardTitle>
-          <CardDescription>Ingresos que has registrado.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {incomes.loading ? (
-            <div className="space-y-3" aria-busy="true" aria-label="Cargando ingresos">
-              {[0, 1, 2].map((row) => (
-                <Skeleton key={row} className="h-6 w-full" />
-              ))}
-            </div>
-          ) : incomes.error ? (
-            <div className="flex flex-col items-start gap-3">
-              <p className="text-sm text-destructive">{incomes.error}</p>
-              <Button type="button" variant="outline" size="sm" onClick={incomes.reload}>
-                Reintentar
+              <Button type="submit" size="lg" disabled={isSubmitting}>
+                {isSubmitting ? 'Guardando...' : 'Registrar ingreso'}
               </Button>
-            </div>
-          ) : (
-            <>
-              {deleteError && <p className="mb-3 text-sm text-destructive">{deleteError}</p>}
-              <IncomeTable
-                items={incomes.data ?? []}
-                currency={CURRENCY}
-                deletingId={deletingId}
-                onDelete={setIncomeToDelete}
-              />
-            </>
-          )}
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">Tus ingresos</CardTitle>
+            <CardDescription>Lo que ya recibiste y lo que está por llegar.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {incomes.loading ? (
+              <div className="space-y-3" aria-busy="true" aria-label="Cargando ingresos">
+                {[0, 1, 2].map((row) => (
+                  <Skeleton key={row} className="h-12 w-full rounded-xl" />
+                ))}
+              </div>
+            ) : incomes.error ? (
+              <div className="flex flex-col items-start gap-3">
+                <p className="text-sm text-destructive">{incomes.error}</p>
+                <Button type="button" variant="outline" size="sm" onClick={incomes.reload}>
+                  Reintentar
+                </Button>
+              </div>
+            ) : (
+              <>
+                {deleteError && <p className="mb-3 text-sm text-destructive">{deleteError}</p>}
+                <IncomeTable
+                  items={incomes.data ?? []}
+                  currency={CURRENCY}
+                  deletingId={deletingId}
+                  onDelete={setIncomeToDelete}
+                />
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <ConfirmDeleteDialog
         open={incomeToDelete !== null}

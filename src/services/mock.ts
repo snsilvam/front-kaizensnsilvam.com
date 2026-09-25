@@ -8,11 +8,13 @@ import type { Dashboard } from '../types/dashboard';
  */
 export const MOCK_DASHBOARD: Dashboard = {
   availableMoney: 1250000,
+  availableAfterCommitments: -70000,
   currency: 'COP',
   nextIncome: {
     amount: 3200000,
     date: '2026-08-15T00:00:00Z',
     source: 'Nomina',
+    daysRemaining: 6,
   },
   planStatus: 'at_risk',
   pending: [

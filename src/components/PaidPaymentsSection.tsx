@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Trash2, Trophy } from 'lucide-react';
+import { ChevronDown, ChevronUp, CircleCheck, Trash2, Trophy } from 'lucide-react';
 import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
-import { formatDate, formatMoney } from '../services/format';
+import { formatMoney, formatShortDate } from '../services/format';
 import {
   deletePendingPayment,
   listPaidPendingPayments,
+  type PaymentMethod,
   type PendingPayment,
 } from '../services/pendingPayments';
 
@@ -81,108 +81,97 @@ export function PaidPaymentsSection({ currency }: PaidPaymentsSectionProps) {
 
   return (
     <>
-      <div className="mt-8 flex justify-center">
-        <Button
+      <section className="mt-4 overflow-hidden rounded-2xl bg-card shadow-soft ring-1 ring-border">
+        <button
           type="button"
-          variant="outline"
-          className="gap-1.5"
+          className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-muted/50"
           aria-expanded={open}
           aria-controls="paid-payments-panel"
           onClick={toggle}
         >
-          <Trophy aria-hidden="true" />
-          {open ? 'Ocultar éxitos financieros' : 'Ver éxitos financieros'}
-          {open ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
-        </Button>
-      </div>
+          <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-700">
+            <Trophy className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold text-foreground">Éxitos financieros</span>
+            <span className="block text-sm text-muted-foreground">
+              {open ? 'Lo que ya pagaste.' : 'Mira todo lo que ya pagaste.'}
+            </span>
+          </span>
+          {open ? (
+            <ChevronUp aria-hidden="true" className="size-5 text-muted-foreground" />
+          ) : (
+            <ChevronDown aria-hidden="true" className="size-5 text-muted-foreground" />
+          )}
+        </button>
 
-      {open && (
-        <Card className="mt-4" id="paid-payments-panel">
-          <CardHeader>
-            <CardTitle className="text-lg">Éxitos financieros:</CardTitle>
-            <CardDescription>Gastos que ya pagaste.</CardDescription>
-          </CardHeader>
-          <CardContent>
+        {open && (
+          <div id="paid-payments-panel" className="border-t px-5 pt-2 pb-5">
             {loading ? (
-              <div className="space-y-3" aria-busy="true" aria-label="Cargando gastos pagados">
+              <div className="space-y-3 pt-3" aria-busy="true" aria-label="Cargando gastos pagados">
                 {[0, 1, 2].map((row) => (
-                  <Skeleton key={row} className="h-6 w-full" />
+                  <Skeleton key={row} className="h-10 w-full rounded-xl" />
                 ))}
               </div>
             ) : error ? (
-              <div className="flex flex-col items-start gap-3">
+              <div className="flex flex-col items-start gap-3 pt-3">
                 <p className="text-sm text-destructive">{error}</p>
                 <Button type="button" variant="outline" size="sm" onClick={load}>
                   Reintentar
                 </Button>
               </div>
             ) : !items || items.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Todavía no has pagado ningún gasto.</p>
+              <p className="pt-3 text-sm text-muted-foreground">
+                Todavía no has pagado ningún gasto. El primero que marques como pagado aparecerá aquí.
+              </p>
             ) : (
               <>
-                {deleteError && <p className="mb-3 text-sm text-destructive">{deleteError}</p>}
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-sm">
-                    <thead>
-                      <tr className="border-b border-border text-left">
-                        <th className="py-2 pr-3 font-semibold text-muted-foreground">Nombre</th>
-                        <th className="py-2 pr-3 text-right font-semibold text-muted-foreground">
-                          Monto
-                        </th>
-                        <th className="py-2 pr-3 text-right font-semibold text-muted-foreground">
-                          Fecha límite
-                        </th>
-                        <th className="py-2 text-right font-semibold text-muted-foreground">
-                          <span className="sr-only">Acciones</span>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((payment) => (
-                        <tr key={payment.id} className="border-b border-border">
-                          <td className="py-3 pr-3 font-medium text-foreground">{payment.name}</td>
-                          <td className="py-3 pr-3 text-right whitespace-nowrap text-foreground">
-                            {formatMoney(payment.amount, currency)}
-                          </td>
-                          <td className="py-3 pr-3 text-right whitespace-nowrap text-xs text-muted-foreground">
-                            {formatDate(payment.dueDate)}
-                          </td>
-                          <td className="py-3 text-right">
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon-sm"
-                              aria-label={`Eliminar ${payment.name}`}
-                              title="Eliminar"
-                              disabled={deletingId === payment.id}
-                              onClick={() => {
-                                setDeleteError(null);
-                                setPaymentToDelete(payment);
-                              }}
-                            >
-                              <Trash2 aria-hidden="true" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td className="py-3 pr-3 font-semibold text-foreground">Total pagado</td>
-                        <td className="py-3 pr-3 text-right font-bold whitespace-nowrap text-primary">
-                          {formatMoney(total, currency)}
-                        </td>
-                        <td />
-                        <td />
-                      </tr>
-                    </tfoot>
-                  </table>
+                {deleteError && <p className="mt-3 text-sm text-destructive">{deleteError}</p>}
+                <ul className="m-0 -mx-2 list-none divide-y divide-border/70 p-0">
+                  {items.map((payment) => (
+                    <li key={payment.id} className="flex items-center gap-3 px-2 py-3">
+                      <CircleCheck aria-hidden="true" className="size-5 shrink-0 text-success" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">{payment.name}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {[
+                            payment.paymentMethod ? PAYMENT_METHOD_LABELS[payment.paymentMethod] : null,
+                            `límite ${formatShortDate(payment.dueDate)}`,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold whitespace-nowrap text-foreground tabular-nums">
+                        {formatMoney(payment.amount, currency)}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        aria-label={`Eliminar ${payment.name}`}
+                        title="Eliminar"
+                        disabled={deletingId === payment.id}
+                        onClick={() => {
+                          setDeleteError(null);
+                          setPaymentToDelete(payment);
+                        }}
+                      >
+                        <Trash2 aria-hidden="true" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-2 flex items-baseline justify-between rounded-xl bg-success-soft px-4 py-3">
+                  <span className="text-sm font-semibold text-foreground">Total pagado</span>
+                  <span className="text-lg font-bold text-success tabular-nums">{formatMoney(total, currency)}</span>
                 </div>
               </>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
+      </section>
 
       <ConfirmDeleteDialog
         open={paymentToDelete !== null}
@@ -198,3 +187,8 @@ export function PaidPaymentsSection({ currency }: PaidPaymentsSectionProps) {
     </>
   );
 }
+
+const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  digital: 'Pago digital',
+  cash: 'Efectivo',
+};

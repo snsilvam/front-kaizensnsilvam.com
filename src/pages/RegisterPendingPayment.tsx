@@ -1,10 +1,13 @@
 import { useMemo, useState, type FormEvent } from 'react';
+import { ArrowRight, CircleCheck, Receipt, ShoppingCart, type LucideIcon } from 'lucide-react';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { DateTimePicker } from '../components/DateTimePicker';
+import { MoneyInput, parseMoney } from '../components/MoneyInput';
+import { PageHeader } from '../components/PageHeader';
 import { usePendingPaymentCategories } from '../hooks/usePendingPaymentCategories';
 import {
   registerPendingPayment,
@@ -20,13 +23,15 @@ import {
  * Una categoria que el backend agregue y no este en este mapa se pinta con su
  * propio nombre: el selector no se rompe por no conocerla.
  */
-const CATEGORY_COPY: Record<PendingPaymentCategoryCode, { label: string; hint: string }> = {
-  otros: { label: 'Gasto normal', hint: 'Solo quiero tenerlo presente.' },
-  mercado: { label: 'Mercado', hint: 'Voy a comprar contra este monto.' },
+const CATEGORY_COPY: Record<PendingPaymentCategoryCode, { label: string; hint: string; icon: LucideIcon }> = {
+  otros: { label: 'Gasto normal', hint: 'Solo quiero tenerlo presente.', icon: Receipt },
+  mercado: { label: 'Mercado', hint: 'Voy a comprar contra este monto.', icon: ShoppingCart },
 };
 
 /** La categoria por defecto: la que queda si el usuario no elige ninguna. */
 const DEFAULT_CATEGORY_CODE: PendingPaymentCategoryCode = 'otros';
+
+type Success = { message: string; goTo: { href: string; label: string } };
 
 export function RegisterPendingPayment() {
   const { categories, error: categoriesError } = usePendingPaymentCategories();
@@ -36,7 +41,7 @@ export function RegisterPendingPayment() {
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [success, setSuccess] = useState<Success | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // El backend ordena por nombre, pero la pantalla siempre ha abierto con el
@@ -49,13 +54,14 @@ export function RegisterPendingPayment() {
   const selectedId =
     categoryId || options.find((option) => option.code === DEFAULT_CATEGORY_CODE)?.id || '';
   const selectedCode = options.find((option) => option.id === selectedId)?.code;
+  const isMarket = selectedCode === 'mercado';
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
-    setSuccess('');
+    setSuccess(null);
 
-    const numericAmount = Number(amount.replace(/\./g, ''));
+    const numericAmount = parseMoney(amount);
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       setError('Ingresa un monto mayor que cero.');
       return;
@@ -63,7 +69,7 @@ export function RegisterPendingPayment() {
 
     const date = new Date(dueDate);
     if (Number.isNaN(date.getTime())) {
-      setError('Ingresa una fecha límite válida.');
+      setError('Elige la fecha límite de pago.');
       return;
     }
 
@@ -78,9 +84,15 @@ export function RegisterPendingPayment() {
         ...(selectedId ? { categoryId: selectedId } : {}),
       });
       setSuccess(
-        selectedCode === 'mercado'
-          ? 'Presupuesto de mercado creado. Ya puedes usarlo en Mercado.'
-          : 'Gasto pendiente registrado correctamente.',
+        isMarket
+          ? {
+              message: 'Presupuesto de mercado creado.',
+              goTo: { href: '/mercado', label: 'Ir a mercado' },
+            }
+          : {
+              message: 'Gasto pendiente registrado.',
+              goTo: { href: '/', label: 'Ver resumen' },
+            },
       );
       setName('');
       setPlace('');
@@ -96,25 +108,18 @@ export function RegisterPendingPayment() {
 
   return (
     <section className="mx-auto max-w-xl" aria-labelledby="register-pending-payment-title">
-      <div className="mb-8">
-        <p className="mb-2.5 text-xs font-bold tracking-[0.1em] text-primary uppercase">Mantén tus pagos al día</p>
-        <h1 id="register-pending-payment-title" className="font-heading text-3xl font-bold tracking-[-0.055em] text-foreground sm:text-4xl">
-          Registrar gasto pendiente
-        </h1>
-        <p className="mt-3.5 text-base leading-relaxed text-muted-foreground">
-          Registra un pago para tenerlo presente en tu planificación.
-        </p>
-      </div>
+      <PageHeader
+        id="register-pending-payment-title"
+        eyebrow="Gastos"
+        title="Registrar gasto pendiente"
+        description="Anota lo que tienes que pagar. Lo descontaremos de lo que puedes gastar para que no te tome por sorpresa."
+      />
 
       <Card className="overflow-visible">
-        <CardHeader>
-          <CardTitle>Datos del gasto</CardTitle>
-          <CardDescription>Completa la información para guardarla.</CardDescription>
-        </CardHeader>
         <CardContent>
-          <form className="flex flex-col gap-5" onSubmit={submit}>
+          <form className="flex flex-col gap-6" onSubmit={submit}>
             {options.length > 0 && (
-              <div className="grid gap-2">
+              <div className="grid gap-2.5">
                 <span id="pending-payment-category-label" className="text-sm font-medium leading-none">
                   Tipo de gasto
                 </span>
@@ -125,21 +130,33 @@ export function RegisterPendingPayment() {
                 >
                   {options.map((option) => {
                     const copy = copyFor(option);
+                    const Icon = copy.icon;
+                    const selected = selectedId === option.id;
                     return (
                       <button
                         key={option.id}
                         type="button"
                         role="radio"
-                        aria-checked={selectedId === option.id}
+                        aria-checked={selected}
                         onClick={() => setCategoryId(option.id)}
-                        className={`rounded-lg border px-3 py-2.5 text-left transition-colors ${
-                          selectedId === option.id
-                            ? 'border-primary bg-primary/10'
-                            : 'border-input hover:bg-muted'
+                        className={`flex flex-col items-start gap-2.5 rounded-xl border px-3.5 py-3 text-left transition-colors outline-none sm:flex-row sm:gap-3 focus-visible:ring-3 focus-visible:ring-ring/50 ${
+                          selected
+                            ? 'border-primary bg-accent ring-1 ring-primary'
+                            : 'border-input bg-card hover:border-primary/40 hover:bg-muted/60'
                         }`}
                       >
-                        <span className="block text-sm font-semibold text-foreground">{copy.label}</span>
-                        <span className="block text-xs text-muted-foreground">{copy.hint}</span>
+                        <span
+                          aria-hidden="true"
+                          className={`grid size-9 shrink-0 place-items-center rounded-lg ${
+                            selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          <Icon className="size-[1.1rem]" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-foreground">{copy.label}</span>
+                          <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{copy.hint}</span>
+                        </span>
                       </button>
                     );
                   })}
@@ -148,7 +165,7 @@ export function RegisterPendingPayment() {
             )}
 
             {categoriesError && (
-              <Alert variant="destructive">
+              <Alert variant="warning">
                 <AlertDescription>
                   No pudimos cargar los tipos de gasto. Puedes registrarlo igual: quedará como gasto
                   normal.
@@ -156,50 +173,48 @@ export function RegisterPendingPayment() {
               </Alert>
             )}
 
-            <div className="grid gap-2">
-              <Label htmlFor="pending-payment-name">Nombre</Label>
+            <div className="grid gap-2.5">
+              <Label htmlFor="pending-payment-amount" className="text-base font-semibold">
+                {isMarket ? '¿Cuánto tienes para el mercado?' : '¿Cuánto vas a pagar?'}
+              </Label>
+              <MoneyInput
+                id="pending-payment-amount"
+                size="lg"
+                value={amount}
+                onChange={setAmount}
+                placeholder="90.000"
+                required
+              />
+            </div>
+
+            <div className="grid gap-2.5">
+              <Label htmlFor="pending-payment-name">¿Qué es?</Label>
               <Input
                 id="pending-payment-name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Ej. Internet"
+                placeholder={isMarket ? 'Ej. Mercado de la quincena' : 'Ej. Internet'}
                 required
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="pending-payment-place">Lugar (opcional)</Label>
-              <Input
-                id="pending-payment-place"
-                value={place}
-                onChange={(event) => setPlace(event.target.value)}
-                placeholder="Ej. Supermercado del barrio"
-              />
-            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-2.5">
+                <Label htmlFor="pending-payment-date">Fecha límite</Label>
+                <DateTimePicker id="pending-payment-date" value={dueDate} onChange={setDueDate} />
+              </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="pending-payment-amount">Monto</Label>
-              <Input
-                id="pending-payment-amount"
-                type="text"
-                value={amount}
-                onChange={(event) => {
-                  const digits = event.target.value.replace(/\D/g, '');
-                  setAmount(digits ? Number(digits).toLocaleString('es-CO') : '');
-                }}
-                inputMode="numeric"
-                placeholder="Ej. 90.000"
-                required
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="pending-payment-date">Fecha límite de pago</Label>
-              <DateTimePicker
-                id="pending-payment-date"
-                value={dueDate}
-                onChange={setDueDate}
-              />
+              <div className="grid gap-2.5">
+                <Label htmlFor="pending-payment-place">
+                  Lugar <span className="font-normal text-muted-foreground">(opcional)</span>
+                </Label>
+                <Input
+                  id="pending-payment-place"
+                  value={place}
+                  onChange={(event) => setPlace(event.target.value)}
+                  placeholder="Ej. Supermercado del barrio"
+                />
+              </div>
             </div>
 
             {error && (
@@ -208,13 +223,19 @@ export function RegisterPendingPayment() {
               </Alert>
             )}
             {success && (
-              <Alert>
-                <AlertDescription>{success}</AlertDescription>
+              <Alert variant="success">
+                <CircleCheck aria-hidden="true" />
+                <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
+                  {success.message}
+                  <a href={success.goTo.href} className="inline-flex items-center gap-1 font-semibold no-underline">
+                    {success.goTo.label} <ArrowRight aria-hidden="true" className="size-3.5" />
+                  </a>
+                </AlertDescription>
               </Alert>
             )}
 
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Guardando...' : 'Registrar gasto pendiente'}
+            <Button type="submit" size="lg" disabled={isSubmitting}>
+              {isSubmitting ? 'Guardando...' : isMarket ? 'Crear presupuesto de mercado' : 'Registrar gasto pendiente'}
             </Button>
           </form>
         </CardContent>
@@ -237,6 +258,6 @@ function sortWithDefaultFirst(categories: PendingPaymentCategory[]): PendingPaym
 }
 
 /** La copia de la pantalla si conocemos la categoria; su nombre si no. */
-function copyFor(category: PendingPaymentCategory): { label: string; hint: string } {
-  return CATEGORY_COPY[category.code] ?? { label: category.name, hint: '' };
+function copyFor(category: PendingPaymentCategory): { label: string; hint: string; icon: LucideIcon } {
+  return CATEGORY_COPY[category.code] ?? { label: category.name, hint: '', icon: Receipt };
 }

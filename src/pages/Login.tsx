@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Eye, EyeOff, Mail } from 'lucide-react';
+import { CalendarClock, Eye, EyeOff, Mail, TrendingUp, Wallet, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../auth/useAuth';
 import { MIN_PASSWORD_LENGTH, authErrorMessage } from '../auth/firebase';
 import KaizenLogo from '../components/KaizenLogo';
@@ -94,12 +94,15 @@ export function Login() {
   const working = busy !== null;
 
   return (
-    <div className="relative grid min-h-screen place-items-center overflow-hidden bg-background px-4 py-8 sm:px-6">
+    <div className="grid min-h-screen bg-background lg:grid-cols-[1.05fr_1fr]">
+      <BrandPanel />
+
+      <div className="relative grid place-items-center overflow-hidden px-4 py-8 sm:px-6">
       <div className="absolute -top-32 -right-28 size-96 rounded-full bg-primary/10 blur-3xl" aria-hidden="true" />
       <div className="absolute -bottom-40 -left-24 size-96 rounded-full bg-accent blur-3xl" aria-hidden="true" />
 
       <main className="relative w-full max-w-md" aria-labelledby="login-title">
-        <div className="mb-6 flex justify-center">
+        <div className="mb-6 flex justify-center lg:hidden">
           <KaizenLogo
             width={64}
             height={64}
@@ -264,7 +267,49 @@ export function Login() {
           Una forma simple de tomar mejores decisiones con tu vida.
         </p>
       </main>
+      </div>
     </div>
+  );
+}
+
+/** Lo que Kaizen responde, contado antes de pedir la contraseña. */
+const PROMISES: { icon: LucideIcon; title: string; detail: string }[] = [
+  { icon: Wallet, title: '¿Cuánto puedo gastar hoy?', detail: 'Tu disponible real, ya descontando lo que debes.' },
+  { icon: CalendarClock, title: '¿Cuántos días faltan para mi ingreso?', detail: 'Y cuánto te rinde cada uno de esos días.' },
+  { icon: TrendingUp, title: '¿Voy bien con mi plan?', detail: 'Una respuesta clara, sin hojas de cálculo.' },
+];
+
+function BrandPanel() {
+  return (
+    <aside className="hero-surface relative hidden flex-col justify-between overflow-hidden p-10 lg:flex xl:p-14">
+      <div className="flex items-center gap-3">
+        <KaizenLogo width={48} height={48} className="size-12 rounded-2xl object-cover ring-1 ring-white/15" alt="" />
+        <span className="text-lg font-bold tracking-tight">
+          Kaizen <span lang="ja" className="ml-1 font-medium text-hero-foreground/50">改善</span>
+        </span>
+      </div>
+
+      <div className="max-w-md">
+        <h2 className="text-4xl leading-[1.1] font-bold tracking-[-0.04em] xl:text-5xl">
+          Tu dinero y tus hábitos, con calma.
+        </h2>
+        <ul className="mt-10 grid list-none gap-5 p-0">
+          {PROMISES.map(({ icon: Icon, title, detail }) => (
+            <li key={title} className="flex gap-4">
+              <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-xl bg-white/10 text-hero-accent ring-1 ring-white/10">
+                <Icon className="size-5" />
+              </span>
+              <span>
+                <span className="block font-semibold">{title}</span>
+                <span className="mt-0.5 block text-sm text-hero-foreground/65">{detail}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="text-sm text-hero-foreground/50">Un poco mejor cada día.</p>
+    </aside>
   );
 }
 

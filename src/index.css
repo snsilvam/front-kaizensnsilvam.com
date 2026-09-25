@@ -7,25 +7,35 @@
 
 :root {
   font-synthesis: none;
-  --background: #f4f7f2;
-  --foreground: #193b2b;
+  /* Paleta de finanzas: verde bosque sobre papel calido. Calma, no alarma. */
+  --background: #f5f6f1;
+  --foreground: #14281f;
   --card: #ffffff;
-  --card-foreground: #193b2b;
+  --card-foreground: #14281f;
   --popover: #ffffff;
-  --popover-foreground: #193b2b;
+  --popover-foreground: #14281f;
   --primary: #1f6a4b;
   --primary-foreground: #ffffff;
-  --secondary: #eef4ed;
-  --secondary-foreground: #193b2b;
-  --muted: #eef4ed;
-  --muted-foreground: #62736a;
-  --accent: #e7f1e9;
+  --secondary: #eef3ec;
+  --secondary-foreground: #14281f;
+  --muted: #eef2ec;
+  --muted-foreground: #5b6b62;
+  --accent: #e6f1e8;
   --accent-foreground: #1f6a4b;
   --destructive: #c0392b;
-  --border: #dce5d9;
-  --input: #cfdacf;
-  --ring: #6ba583;
-  --radius: 0.625rem;
+  --destructive-soft: #fbeae7;
+  --success: #1d7a50;
+  --success-soft: #e2f3e9;
+  --warning: #a8650f;
+  --warning-soft: #fcf1dd;
+  --border: #e0e6de;
+  --input: #d2dcd1;
+  --ring: #5f9e7c;
+  /* La tarjeta que responde "cuanto puedo gastar": el verde del fondo del Pastor. */
+  --hero: #10352a;
+  --hero-foreground: #eef5ef;
+  --hero-accent: #9be3b8;
+  --radius: 0.75rem;
 }
 
 @theme inline {
@@ -35,6 +45,14 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-soft: var(--destructive-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-hero: var(--hero);
+  --color-hero-foreground: var(--hero-foreground);
+  --color-hero-accent: var(--hero-accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -53,6 +71,7 @@
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
+  --shadow-soft: 0 1px 2px rgb(20 40 31 / 0.04), 0 10px 30px -14px rgb(20 40 31 / 0.14);
 }
 
 @layer base {
@@ -61,7 +80,26 @@
   }
 
   body {
-    @apply min-w-80 bg-background text-foreground;
+    @apply min-w-80 bg-background text-foreground antialiased;
+  }
+
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+}
+
+/* --- Modo finanzas --------------------------------------------------------
+   La tarjeta que responde "cuanto puedo gastar hoy": el verde profundo del
+   fondo del Pastor, con un brillo suave para que la cifra sea lo primero que
+   se ve al entrar. */
+@layer components {
+  .hero-surface {
+    background-color: var(--hero);
+    background-image:
+      radial-gradient(120% 140% at 100% 0%, rgb(155 227 184 / 0.2) 0%, rgb(155 227 184 / 0) 55%),
+      radial-gradient(90% 120% at 0% 100%, rgb(31 106 75 / 0.55) 0%, rgb(31 106 75 / 0) 60%);
+    color: var(--hero-foreground);
   }
 }
 

@@ -1,5 +1,6 @@
 import { MarketBudgetPicker } from '../components/MarketBudgetPicker';
 import { MarketCart } from '../components/MarketCart';
+import { PageHeader } from '../components/PageHeader';
 
 /**
  * Modulo de mercado. Una sola ruta con dos pantallas:
@@ -13,23 +14,17 @@ export function Market() {
   const budgetId = new URLSearchParams(window.location.search).get('id');
 
   return (
-    <section aria-labelledby="market-title">
-      <div className="mb-8">
-        <p className="mb-2.5 text-xs font-bold tracking-[0.1em] text-primary uppercase">
-          Compra con el presupuesto a la vista
-        </p>
-        <h1
-          id="market-title"
-          className="font-heading text-3xl font-bold tracking-[-0.055em] text-foreground sm:text-4xl"
-        >
-          Hacer mercado
-        </h1>
-        <p className="mt-3.5 text-base leading-relaxed text-muted-foreground">
-          {budgetId
+    <section className="mx-auto max-w-3xl" aria-labelledby="market-title">
+      <PageHeader
+        id="market-title"
+        eyebrow="Compra con el presupuesto a la vista"
+        title="Hacer mercado"
+        description={
+          budgetId
             ? 'Agrega lo que echas al carro y mira cuánto te queda.'
-            : 'Elige contra cuál de tus gastos vas a comprar.'}
-        </p>
-      </div>
+            : 'Elige contra cuál de tus gastos vas a comprar.'
+        }
+      />
 
       {budgetId ? <MarketCart budgetId={budgetId} /> : <MarketBudgetPicker />}
     </section>

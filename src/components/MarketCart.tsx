@@ -1,5 +1,5 @@
 import { Fragment, useState, type FormEvent } from 'react';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -8,6 +8,7 @@ import { Label } from './ui/label';
 import { Separator } from './ui/separator';
 import { Skeleton } from './ui/skeleton';
 import { ConfirmPaymentDialog } from './ConfirmPaymentDialog';
+import { MoneyInput, parseMoney } from './MoneyInput';
 import { ErrorMessage } from './ErrorMessage';
 import { formatMoney } from '../services/format';
 import { MARKET_CURRENCY } from '../services/market';
@@ -19,10 +20,10 @@ import type { MarketStatus } from '../types/market';
  * Colores del semaforo. El estado lo decide el backend; aqui solo se traduce
  * a clases para que la cifra grande y la barra digan lo mismo.
  */
-const STATUS_STYLES: Record<MarketStatus, { amount: string; bar: string }> = {
-  ok: { amount: 'text-primary', bar: 'bg-primary' },
-  warning: { amount: 'text-amber-600', bar: 'bg-amber-500' },
-  exceeded: { amount: 'text-destructive', bar: 'bg-destructive' },
+const STATUS_STYLES: Record<MarketStatus, { amount: string; bar: string; note: string }> = {
+  ok: { amount: 'text-hero-foreground', bar: 'bg-hero-accent', note: 'bg-white/[0.07] ring-white/10' },
+  warning: { amount: 'text-amber-200', bar: 'bg-amber-300', note: 'bg-amber-300/15 ring-amber-300/30' },
+  exceeded: { amount: 'text-red-200', bar: 'bg-red-300', note: 'bg-red-300/15 ring-red-300/30' },
 };
 
 interface MarketCartProps {
@@ -45,7 +46,7 @@ export function MarketCart({ budgetId }: MarketCartProps) {
     event.preventDefault();
     setFormError('');
 
-    const numericPrice = Number(price.replace(/\./g, ''));
+    const numericPrice = parseMoney(price);
     if (!Number.isFinite(numericPrice) || numericPrice <= 0) {
       setFormError('Ingresa un precio mayor que cero.');
       return;
@@ -113,54 +114,45 @@ export function MarketCart({ budgetId }: MarketCartProps) {
         Cambiar presupuesto
       </Button>
 
-      <Card className="border-primary/20 bg-primary/5">
-        <CardHeader>
-          <CardTitle>{summary.name}</CardTitle>
-          <CardDescription>
-            {summary.itemsCount === 1
-              ? '1 producto en el carro'
-              : `${summary.itemsCount} productos en el carro`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div>
-            <p className="text-sm text-muted-foreground">Te queda</p>
-            <p className={`text-4xl font-bold tracking-tight ${styles.amount}`}>
-              {formatMoney(summary.remaining, MARKET_CURRENCY)}
+      <div className="hero-surface overflow-hidden rounded-2xl p-6 shadow-lg shadow-hero/20 sm:p-7">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold">{summary.name}</p>
+            <p className="mt-0.5 text-sm text-hero-foreground/70">
+              {summary.itemsCount === 1
+                ? '1 producto en el carro'
+                : `${summary.itemsCount} productos en el carro`}
             </p>
           </div>
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10" aria-hidden="true">
+            <ShoppingCart className="size-5" />
+          </span>
+        </div>
 
-          <div
-            className="h-2 w-full overflow-hidden rounded-full bg-muted"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={spentPercent}
-            aria-label="Presupuesto consumido"
-          >
-            <div className={`h-full ${styles.bar}`} style={{ width: `${spentPercent}%` }} />
-          </div>
+        <p className="mt-6 text-sm text-hero-foreground/75">Te queda</p>
+        <p className={`mt-1 text-5xl font-bold tracking-[-0.045em] tabular-nums ${styles.amount}`}>
+          {formatMoney(summary.remaining, MARKET_CURRENCY)}
+        </p>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Presupuesto</p>
-              <p className="text-xl font-semibold tracking-tight text-foreground">
-                {formatMoney(summary.budget, MARKET_CURRENCY)}
-              </p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">Llevas gastado</p>
-              <p className="text-xl font-semibold tracking-tight text-foreground">
-                {formatMoney(summary.spent, MARKET_CURRENCY)}
-              </p>
-            </div>
-          </div>
+        <div
+          className="mt-5 h-2.5 w-full overflow-hidden rounded-full bg-white/15"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={spentPercent}
+          aria-label="Presupuesto consumido"
+        >
+          <div className={`h-full rounded-full transition-[width] ${styles.bar}`} style={{ width: `${spentPercent}%` }} />
+        </div>
+        <div className="mt-2 flex justify-between text-xs text-hero-foreground/70 tabular-nums">
+          <span>Gastado {formatMoney(summary.spent, MARKET_CURRENCY)}</span>
+          <span>de {formatMoney(summary.budget, MARKET_CURRENCY)}</span>
+        </div>
 
-          <Alert variant={summary.status === 'exceeded' ? 'destructive' : 'default'}>
-            <AlertDescription>{summary.message}</AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
+        <p className={`mt-5 rounded-xl px-4 py-3 text-sm ring-1 ${styles.note}`} role="status">
+          {summary.message}
+        </p>
+      </div>
 
       <Card className="mt-6">
         <CardHeader>
@@ -182,18 +174,7 @@ export function MarketCart({ budgetId }: MarketCartProps) {
 
             <div className="grid gap-2 sm:w-44">
               <Label htmlFor="market-item-price">Precio</Label>
-              <Input
-                id="market-item-price"
-                type="text"
-                value={price}
-                onChange={(event) => {
-                  const digits = event.target.value.replace(/\D/g, '');
-                  setPrice(digits ? Number(digits).toLocaleString('es-CO') : '');
-                }}
-                inputMode="numeric"
-                placeholder="Ej. 4.500"
-                required
-              />
+              <MoneyInput id="market-item-price" value={price} onChange={setPrice} placeholder="4.500" required />
             </div>
 
             <Button type="submit" className="gap-1.5" disabled={adding}>
@@ -222,7 +203,7 @@ export function MarketCart({ budgetId }: MarketCartProps) {
         </CardHeader>
         <CardContent>
           {summary.items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Todavía no has agregado productos.</p>
+            <p className="rounded-xl border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">Todavía no has agregado productos. Empieza por lo que ya tienes en la mano.</p>
           ) : (
             <ul className="m-0 list-none p-0">
               {summary.items.map((item, index) => (
@@ -230,12 +211,13 @@ export function MarketCart({ budgetId }: MarketCartProps) {
                   <li className="flex items-center justify-between gap-3 py-3 text-sm">
                     <span className="min-w-0 truncate font-medium text-foreground">{item.name}</span>
                     <span className="flex shrink-0 items-center gap-3">
-                      <span className="whitespace-nowrap text-muted-foreground">
+                      <span className="font-semibold whitespace-nowrap text-foreground tabular-nums">
                         {formatMoney(item.price, MARKET_CURRENCY)}
                       </span>
                       <Button
                         type="button"
-                        variant="destructive"
+                        variant="ghost"
+                        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                         size="icon-sm"
                         aria-label={`Quitar ${item.name}`}
                         title="Quitar del carro"
@@ -261,8 +243,9 @@ export function MarketCart({ budgetId }: MarketCartProps) {
       )}
 
       <div className="mt-10 flex justify-center">
-        <Button type="button" disabled={closing} onClick={() => setConfirmingClose(true)}>
-          TERMINAR COMPRA
+        <Button type="button" size="lg" className="w-full sm:w-auto" disabled={closing} onClick={() => setConfirmingClose(true)}>
+          <Check aria-hidden="true" />
+          Terminar compra
         </Button>
       </div>
 

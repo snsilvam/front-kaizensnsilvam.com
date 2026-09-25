@@ -28,15 +28,15 @@ export function ConfirmMarketBudgetDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/35 p-4">
+    <div className="fixed inset-0 z-50 flex animate-in items-end justify-center bg-foreground/40 backdrop-blur-[2px] fade-in duration-150 sm:items-center sm:p-4">
       <div
-        className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl"
+        className="w-full max-w-md animate-in rounded-t-3xl border border-border bg-card p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl duration-200 slide-in-from-bottom-6 sm:rounded-2xl sm:pb-6 sm:zoom-in-95 sm:slide-in-from-bottom-0"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="confirm-market-budget-title"
         aria-describedby="confirm-market-budget-description"
       >
-        <div className="flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <ShoppingCart className="size-5" aria-hidden="true" />
         </div>
         <h2 id="confirm-market-budget-title" className="mt-4 text-lg font-semibold text-foreground">
@@ -63,7 +63,7 @@ export function ConfirmMarketBudgetDialog({
           </div>
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
+        <div className="mt-6 flex flex-col-reverse gap-2 *:h-11 sm:flex-row sm:justify-end sm:*:h-9">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isChoosing}>
             Cancelar
           </Button>

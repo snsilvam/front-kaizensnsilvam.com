@@ -6,11 +6,15 @@ import { Sebas } from './pages/Sebas';
 import { AppLayout } from './components/AppLayout';
 import { Habits } from './pages/Habits';
 import { Market } from './pages/Market';
+import { WinterArc } from './pages/WinterArc';
+import { WinterArcSetup } from './pages/WinterArcSetup';
 
 export default function App() {
   const currentPath = window.location.pathname;
 
   if (currentPath === '/habits') return <Habits />;
+  if (currentPath === '/winter-arc') return <WinterArc />;
+  if (currentPath === '/winter-arc/setup') return <WinterArcSetup />;
 
   return (
     <AppLayout currentPath={currentPath}>

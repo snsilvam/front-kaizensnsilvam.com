@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { LogOut } from 'lucide-react';
+import { House, LogOut, Receipt, ShoppingCart, Wallet } from 'lucide-react';
 import KaizenLogo from './KaizenLogo';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
@@ -7,15 +7,24 @@ import { useAuth } from '../auth/useAuth';
 import { ModeSwitch } from './ModeSwitch';
 import { UserAvatar } from './UserAvatar';
 import { HabitsHeader } from './HabitsHeader';
+import { HamburgerMenu } from './HamburgerMenu';
+import { BottomNav, type FinanceLink } from './BottomNav';
 
 interface AppLayoutProps {
   children: ReactNode;
   currentPath: string;
 }
 
+// Enlaces del modo finanzas: los mismos en el header de escritorio y en las
+// pestañas de movil.
+const NAV_LINKS: FinanceLink[] = [
+  { href: '/', label: 'Inicio', icon: House },
+  { href: '/ingresos', label: 'Ingresos', icon: Wallet },
+  { href: '/gastos', label: 'Gastos', icon: Receipt },
+  { href: '/mercado', label: 'Mercado', icon: ShoppingCart },
+];
+
 export function AppLayout({ children, currentPath }: AppLayoutProps) {
-  const isIncomePage = currentPath === '/ingresos';
-  const isMarketPage = currentPath === '/mercado';
   // El modo habitos tiene su propio header (tema samurai); el de finanzas no aplica ahi.
   const isHabitsMode = currentPath === '/habito-1';
   const { signOut } = useAuth();
@@ -41,74 +50,88 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 sm:px-6">
-      <header className="flex min-h-20 items-center justify-between border-b">
-        <a
-          className="inline-flex items-center gap-2.5 text-lg font-bold tracking-tight text-foreground no-underline"
-          href="/"
-          aria-label="Kaizen, ir al inicio"
-        >
-          <KaizenLogo
-            width={58}
-            height={58}
-            className="size-14 shrink-0 rounded-2xl object-cover shadow-md shadow-primary/20"
-            alt="Pastor, mascota de Kaizen"
-          />
-          <span>Kaizen</span>
-        </a>
-
-        <nav className="flex flex-wrap items-center justify-end gap-2 sm:gap-3" aria-label="Navegación principal">
+    <div className="flex min-h-screen w-full flex-col pb-20 md:pb-0">
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md">
+        <div className="relative mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <a
-            className={`rounded-md px-3 py-2 text-sm font-semibold no-underline transition-colors ${
-              isIncomePage
-                ? 'bg-accent text-primary'
-                : 'text-muted-foreground hover:bg-muted hover:text-primary'
-            }`}
-            href="/ingresos"
+            className="inline-flex items-center gap-2.5 text-foreground no-underline"
+            href="/"
+            aria-label="Kaizen, ir al inicio"
           >
-            Activos(ingresos)
+            <KaizenLogo
+              width={40}
+              height={40}
+              className="size-10 shrink-0 rounded-xl object-cover shadow-md shadow-primary/20"
+              alt="Pastor, mascota de Kaizen"
+            />
+            <span className="flex flex-col leading-none">
+              <span className="text-base font-bold tracking-tight">Kaizen</span>
+              <span className="mt-1 text-[0.68rem] font-medium text-muted-foreground">Finanzas</span>
+            </span>
           </a>
 
-         
-          <a
-            className={`rounded-md px-3 py-2 text-sm font-semibold no-underline transition-colors ${
-              isMarketPage
-                ? 'bg-accent text-primary'
-                : 'text-muted-foreground hover:bg-muted hover:text-primary'
-            }`}
-            href="/mercado"
+          {/* Escritorio: navegacion en linea, al centro. */}
+          <nav
+            className="hidden items-center gap-1 rounded-xl bg-muted/70 p-1 md:flex"
+            aria-label="Navegación principal"
           >
-            Mercado
-          </a>
+            {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+              const active = currentPath === href;
+              return (
+                <a
+                  key={href}
+                  aria-current={active ? 'page' : undefined}
+                  className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold no-underline transition-colors ${
+                    active
+                      ? 'bg-card text-primary shadow-sm'
+                      : 'text-muted-foreground hover:bg-card/60 hover:text-foreground'
+                  }`}
+                  href={href}
+                >
+                  <Icon aria-hidden="true" className="size-4" />
+                  {label}
+                </a>
+              );
+            })}
+          </nav>
 
-          <ModeSwitch currentPath={currentPath} />
+          <div className="hidden items-center gap-2 md:flex">
+            <ModeSwitch currentPath={currentPath} />
+            <UserAvatar />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+              onClick={signOut}
+            >
+              <LogOut aria-hidden="true" />
+            </Button>
+          </div>
 
-          <UserAvatar />
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="ml-1 text-muted-foreground hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
-            aria-label="Cerrar sesión"
-            title="Cerrar sesión"
-            onClick={signOut}
-          >
-            <LogOut aria-hidden="true" />
-            <span className="hidden sm:inline">Cerrar sesión</span>
-          </Button>
-        </nav>
+          {/* Movil: las secciones van en las pestañas de abajo; aqui, la cuenta. */}
+          <div className="flex items-center gap-2 md:hidden">
+            <UserAvatar />
+            <HamburgerMenu links={[]} currentPath={currentPath} />
+          </div>
+        </div>
       </header>
 
-      <main className="flex-1 py-12 sm:py-16">{children}</main>
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 sm:px-6">
+        <main className="flex-1 py-8 sm:py-12">{children}</main>
 
-      <footer className="pb-5">
-        <Separator />
-        <div className="flex flex-col gap-1 py-5 text-xs text-muted-foreground sm:flex-row sm:justify-between">
-          <span>Kaizen</span>
-          <span>Tu dinero, con calma.</span>
-        </div>
-      </footer>
+        <footer className="hidden pb-5 md:block">
+          <Separator />
+          <div className="flex flex-col gap-1 py-5 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+            <span>Kaizen · <span lang="ja">改善</span></span>
+            <span>Tu dinero, con calma.</span>
+          </div>
+        </footer>
+      </div>
+
+      <BottomNav links={NAV_LINKS} currentPath={currentPath} />
     </div>
   );
 }

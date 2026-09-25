@@ -11,6 +11,8 @@ export interface NextIncome {
   date: string;
   /** Origen del ingreso (nomina, cliente, etc.). Opcional. */
   source?: string;
+  /** Dias que faltan para recibirlo, calculados por el backend (0 = hoy). */
+  daysRemaining: number;
 }
 
 export interface PendingItem {
@@ -25,6 +27,8 @@ export interface PendingItem {
 export interface Dashboard {
   /** Dinero disponible hoy. */
   availableMoney: number;
+  /** Lo que queda de hoy despues de pagar todos los pendientes. Puede ser negativo. */
+  availableAfterCommitments: number;
   /** Codigo ISO 4217 (ej: "USD", "COP"). */
   currency: string;
   /** null cuando no hay un proximo ingreso registrado. */
