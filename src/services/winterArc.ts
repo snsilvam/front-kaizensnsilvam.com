@@ -1,5 +1,5 @@
 import { request } from './api';
-import type { WinterArc, WinterArcDay, WinterArcGrid } from '../types/winterArc';
+import type { WinterArc, WinterArcAnalytics, WinterArcDay, WinterArcGrid } from '../types/winterArc';
 
 /**
  * POST /api/winter-arc/setup: inicia el reto de 90 días con los hábitos
@@ -27,6 +27,14 @@ export function getCurrentWinterArc(): Promise<WinterArcGrid> {
 /** GET /api/winter-arc/:id/grid: los 90 días del reto en orden. */
 export function getWinterArcGrid(winterArcId: string): Promise<WinterArcGrid> {
   return request<WinterArcGrid>(`/api/winter-arc/${encodeURIComponent(winterArcId)}/grid`, {}, false);
+}
+
+/**
+ * GET /api/winter-arc/:id/analytics: la retrospectiva de un reto terminado
+ * (completed o failed). Todo se calcula en el backend.
+ */
+export function getWinterArcAnalytics(winterArcId: string): Promise<WinterArcAnalytics> {
+  return request<WinterArcAnalytics>(`/api/winter-arc/${encodeURIComponent(winterArcId)}/analytics`, {}, false);
 }
 
 /**
