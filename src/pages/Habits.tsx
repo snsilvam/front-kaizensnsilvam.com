@@ -177,7 +177,7 @@ export function Habits() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <HabitsHeader currentPath="/habits" />
+      <HabitsHeader />
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 sm:px-6">
       <main className="flex-1 py-10 sm:py-14">

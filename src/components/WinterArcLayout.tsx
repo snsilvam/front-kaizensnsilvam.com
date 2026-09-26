@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
-import { LogOut, Snowflake, Sparkles, WalletCards } from 'lucide-react';
+import { LogOut, Snowflake } from 'lucide-react';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
+import { PathSwitcher } from './PathSwitcher';
 import { UserAvatar } from './UserAvatar';
 import { useAuth } from '../auth/useAuth';
 
@@ -9,8 +10,8 @@ import { useAuth } from '../auth/useAuth';
  * Marco del modulo Winter Arc, la tercera app junto a finanzas y habitos.
  *
  * Igual que el dojo de habitos, cambia de piel para que se note que estas en
- * otro sitio: noche polar y escarcha. Desde aqui se salta a Habitos (donde se
- * registran las repeticiones que el reto evalua) o a Finanzas.
+ * otro sitio: noche polar y escarcha. El boton Caminos lleva a Habitos (donde
+ * se registran las repeticiones que el reto evalua) o a Finanzas.
  */
 export function WinterArcLayout({ children }: { children: ReactNode }) {
   const { signOut } = useAuth();
@@ -39,31 +40,7 @@ export function WinterArcLayout({ children }: { children: ReactNode }) {
           </a>
 
           <div className="flex items-center gap-2.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className={SWITCH_CLASS}
-              aria-label="Ir al modo hábitos"
-              title="Ir a Hábitos"
-              onClick={() => { window.location.href = '/habits'; }}
-            >
-              <Sparkles aria-hidden="true" />
-              <span className="hidden sm:inline">Hábitos</span>
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className={SWITCH_CLASS}
-              aria-label="Ir al modo finanzas"
-              title="Ir a Finanzas"
-              onClick={() => { window.location.href = '/'; }}
-            >
-              <WalletCards aria-hidden="true" />
-              <span className="hidden sm:inline">Finanzas</span>
-            </Button>
+            <PathSwitcher current="winter-arc" tone="polar" />
 
             <span className="grid place-items-center rounded-full p-0.5 ring-1 ring-[#7cc4e8]/50">
               <UserAvatar />
@@ -105,6 +82,3 @@ export function WinterArcLayout({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
-const SWITCH_CLASS =
-  'gap-2 border-[#7cc4e8]/40 bg-[#eef7fc]/5 text-[#eef7fc]/80 hover:border-[#7cc4e8]/70 hover:bg-[#eef7fc]/10 hover:text-[#eef7fc]';

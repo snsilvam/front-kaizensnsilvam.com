@@ -4,7 +4,7 @@ import KaizenLogo from './KaizenLogo';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { useAuth } from '../auth/useAuth';
-import { ModeSwitch } from './ModeSwitch';
+import { PathSwitcher } from './PathSwitcher';
 import { UserAvatar } from './UserAvatar';
 import { HabitsHeader } from './HabitsHeader';
 import { HamburgerMenu } from './HamburgerMenu';
@@ -32,7 +32,7 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
   if (isHabitsMode) {
     return (
       <div className="flex min-h-screen w-full flex-col">
-        <HabitsHeader currentPath={currentPath} />
+        <HabitsHeader />
 
         <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 sm:px-6">
           <main className="flex-1 py-12 sm:py-16">{children}</main>
@@ -95,25 +95,21 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
             })}
           </nav>
 
-          <div className="hidden items-center gap-2 md:flex">
-            <ModeSwitch currentPath={currentPath} />
+          {/* En movil las secciones van en las pestañas de abajo y salir, en el menu. */}
+          <div className="flex items-center gap-2">
+            <PathSwitcher current="finanzas" />
             <UserAvatar />
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              className="hidden text-muted-foreground hover:bg-destructive/10 hover:text-destructive md:inline-flex"
               aria-label="Cerrar sesión"
               title="Cerrar sesión"
               onClick={signOut}
             >
               <LogOut aria-hidden="true" />
             </Button>
-          </div>
-
-          {/* Movil: las secciones van en las pestañas de abajo; aqui, la cuenta. */}
-          <div className="flex items-center gap-2 md:hidden">
-            <UserAvatar />
             <HamburgerMenu links={[]} currentPath={currentPath} />
           </div>
         </div>

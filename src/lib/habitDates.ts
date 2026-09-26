@@ -79,8 +79,13 @@ export function monthLabel(dayKey: string): string {
 
 /** "2026-08-22" -> "22 de agosto de 2026". */
 export function formatDayKey(dayKey: string): string {
-  const { year, month, day } = parseDayKey(dayKey);
-  return `${day} de ${MONTH_NAMES[month - 1] ?? ''} de ${year}`;
+  return `${formatDayMonth(dayKey)} de ${parseDayKey(dayKey).year}`;
+}
+
+/** "2026-08-22" -> "22 de agosto", para cuando el año sobra. */
+export function formatDayMonth(dayKey: string): string {
+  const { month, day } = parseDayKey(dayKey);
+  return `${day} de ${MONTH_NAMES[month - 1] ?? ''}`;
 }
 
 /** Dia del mes como numero, para pintar la celda del calendario. */

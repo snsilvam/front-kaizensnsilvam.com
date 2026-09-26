@@ -1,7 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { LogOut, Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
-import { ModeSwitch } from './ModeSwitch';
 import { useAuth } from '../auth/useAuth';
 
 export interface NavLink {
@@ -17,8 +16,9 @@ interface HamburgerMenuProps {
 /**
  * Navegacion del modo finanzas en pantallas pequenas.
  *
- * En movil el header no tiene espacio para los enlaces, el conmutador de modo
- * y el boton de salir; se agrupan en un panel que se despliega bajo el header.
+ * En movil el header no tiene espacio para los enlaces y el boton de salir; se
+ * agrupan en un panel que se despliega bajo el header. Cambiar de camino queda
+ * fuera, en el boton Caminos del header.
  * Se cierra con Escape o tocando fuera. Los enlaces recargan la pagina (no hay
  * router), asi que no hace falta cerrarlo al navegar.
  */
@@ -95,9 +95,7 @@ export function HamburgerMenu({ links, currentPath }: HamburgerMenuProps) {
           </nav>
           )}
 
-          <div className="flex items-center justify-between gap-2">
-            <ModeSwitch currentPath={currentPath} />
-
+          <div className="flex items-center justify-end gap-2">
             <Button
               type="button"
               variant="outline"

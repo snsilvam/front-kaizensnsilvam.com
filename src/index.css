@@ -224,3 +224,78 @@
     }
   }
 }
+
+/* --- Winter Arc, la cuenta atras ------------------------------------------
+   Nieve cayendo sobre la tarjeta y el bloque de hielo que se sacude al
+   golpearlo. Posicion, tamaño y ritmo de cada copo los pone WinterArcCountdown;
+   se anima `top` para que la caida cubra la tarjeta mida lo que mida. */
+@keyframes winter-snow-fall {
+  0% { top: -4%; transform: translateX(0); opacity: 0; }
+  10%, 85% { opacity: 0.9; }
+  100% { top: 104%; transform: translateX(var(--snow-drift, 0)); opacity: 0; }
+}
+
+@keyframes winter-ice-hit {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(-6deg) scale(0.93); }
+  45% { transform: rotate(5deg) scale(1.04); }
+  70% { transform: rotate(-3deg) scale(0.99); }
+}
+
+@keyframes winter-ember {
+  0%, 100% { opacity: 0.5; transform: scale(0.96); }
+  50% { opacity: 0.9; transform: scale(1.02); }
+}
+
+@layer components {
+  .winter-snowflake {
+    position: absolute;
+    top: -4%;
+    border-radius: 9999px;
+    background-color: rgb(238 247 252 / 0.85);
+    animation-name: winter-snow-fall;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  .winter-ice-hit {
+    animation: winter-ice-hit 0.45s ease-out;
+  }
+
+  /* La llama sigue viva bajo el hielo: respira despacio. */
+  .winter-ember {
+    animation: winter-ember 2.8s ease-in-out infinite;
+  }
+
+  /* Sin movimiento no nieva; el hielo y la llama se quedan quietos. */
+  @media (prefers-reduced-motion: reduce) {
+    .winter-snowflake {
+      display: none;
+    }
+
+    .winter-ice-hit,
+    .winter-ember {
+      animation: none;
+    }
+  }
+}
+
+/* --- Selector de caminos --------------------------------------------------
+   Al elegir un camino, su pantalla de carga cae como cortina sobre el
+   selector y empalma con el splash de la pagina siguiente. */
+@keyframes path-curtain-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@layer components {
+  .path-curtain {
+    animation: path-curtain-in 0.28s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .path-curtain {
+      animation: none;
+    }
+  }
+}

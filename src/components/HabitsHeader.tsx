@@ -1,14 +1,9 @@
-import { LogOut, Snowflake } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { Button } from './ui/button';
-import { ModeSwitch } from './ModeSwitch';
+import { PathSwitcher } from './PathSwitcher';
 import { UserAvatar } from './UserAvatar';
 import { PastorBark } from './PastorBark';
 import { useAuth } from '../auth/useAuth';
-
-interface HabitsHeaderProps {
-  /** Ruta actual, para que el conmutador de modo sepa donde esta. */
-  currentPath: string;
-}
 
 /**
  * Header del modo habitos, con el tema samurai.
@@ -18,7 +13,7 @@ interface HabitsHeaderProps {
  * que estas en otro sitio de la app, y engancha con el camino del Bushido que
  * mide las repeticiones mas abajo.
  */
-export function HabitsHeader({ currentPath }: HabitsHeaderProps) {
+export function HabitsHeader() {
   const { signOut } = useAuth();
 
   return (
@@ -61,21 +56,7 @@ export function HabitsHeader({ currentPath }: HabitsHeaderProps) {
             tu identidad
           </p>
 
-          <ModeSwitch currentPath={currentPath} tone="sumi" />
-
-          {/* El Winter Arc se alimenta de las repeticiones que se registran aqui. */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-2 border-[#7cc4e8]/40 bg-[#f4efe4]/5 text-[#f4efe4]/80 hover:border-[#7cc4e8]/70 hover:bg-[#f4efe4]/10 hover:text-[#f4efe4]"
-            aria-label="Ir al Winter Arc"
-            title="Ir al Winter Arc"
-            onClick={() => { window.location.href = '/winter-arc'; }}
-          >
-            <Snowflake aria-hidden="true" className="text-[#7cc4e8]" />
-            <span className="hidden sm:inline">Winter Arc</span>
-          </Button>
+          <PathSwitcher current="habitos" tone="sumi" />
 
           <span className="grid place-items-center rounded-full p-0.5 ring-1 ring-[#c9a227]/50">
             <UserAvatar />
