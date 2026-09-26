@@ -1,5 +1,6 @@
 import { Snowflake, Sparkles, Trophy } from 'lucide-react';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { WinterArcAnalytics } from '../components/WinterArcAnalytics';
 import { WinterArcGrid } from '../components/WinterArcGrid';
 import { WinterArcLayout } from '../components/WinterArcLayout';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
@@ -46,7 +47,8 @@ function CurrentArc() {
 
   if (current.data.status === 'active') return <ActiveArc winterArcId={current.data.id} />;
 
-  // Reto terminado (perdido o completado): se ve su resultado y se puede empezar otro.
+  // Reto terminado (perdido o completado): su retrospectiva encabeza, el grid
+  // queda debajo como registro y se puede empezar otro.
   return (
     <div className="grid gap-6">
       {current.data.status === 'completed' && (
@@ -56,6 +58,8 @@ function CurrentArc() {
           <AlertDescription>90 días sin dejar que se apagara la llama.</AlertDescription>
         </Alert>
       )}
+
+      <WinterArcAnalytics winterArcId={current.data.id} />
 
       <Card>
         <CardContent>

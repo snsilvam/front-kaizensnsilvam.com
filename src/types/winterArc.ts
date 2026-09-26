@@ -53,3 +53,51 @@ export interface WinterArcGrid {
   /** Los 90 días del reto en orden cronológico. */
   days: WinterArcDay[];
 }
+
+// Contrato de GET /api/winter-arc/:id/analytics: la retrospectiva de un reto terminado.
+
+/** Día de la semana ISO 8601: 1 = lunes ... 7 = domingo. */
+export type IsoWeekday = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+/** Una Regla Inquebrantable con los días del reto en que tuvo repetición. */
+export interface WinterArcHabitTally {
+  habit_id: string;
+  /** Nombre del hábito en Kaizen Habits. */
+  name: string;
+  /** Días con al menos una repetición del hábito. */
+  completed_days: number;
+  /** Días cerrados con detalle por hábito en el tramo: hasta el día 90 o hasta el que se perdió el reto. */
+  evaluated_days: number;
+}
+
+/** El hábito más constante en el último tercio de los días evaluados. */
+export interface WinterArcAnchorHabit extends WinterArcHabitTally {
+  /** Primer día (1 a 90) del último tercio. */
+  from_day: number;
+  /** Último día evaluado. */
+  to_day: number;
+}
+
+export interface WinterArcWeekdayStat {
+  weekday: IsoWeekday;
+  /** Días exitosos (todas las reglas cumplidas) que cayeron en ese día de la semana. */
+  successful_days: number;
+  evaluated_days: number;
+}
+
+/** Respuesta de GET /api/winter-arc/:id/analytics. Sólo existe para retos terminados. */
+export interface WinterArcAnalytics {
+  id: string;
+  status: WinterArcStatus;
+  /** Hábito con más días cumplidos en todo el reto; null si no hubo ninguna repetición. */
+  unbreakable_habit: WinterArcHabitTally | null;
+  /** Siempre 7, de lunes a domingo. */
+  weekdays: WinterArcWeekdayStat[];
+  /**
+   * Mayor y menor tasa de éxito. Los decide el backend (los empates los gana
+   * el primero de la semana); null si todos los días tienen la misma tasa.
+   */
+  best_weekday: IsoWeekday | null;
+  worst_weekday: IsoWeekday | null;
+  anchor_habit: WinterArcAnchorHabit | null;
+}
