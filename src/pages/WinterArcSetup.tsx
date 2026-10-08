@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Plus } from 'lucide-react';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { WinterArcLayout } from '../components/WinterArcLayout';
 import { Alert, AlertDescription } from '../components/ui/alert';
@@ -84,7 +85,7 @@ export function WinterArcSetup() {
                   Necesitas al menos {WINTER_ARC_MIN_RULES} hábitos activos para comenzar el reto. Tienes{' '}
                   {activeHabits.length}.
                 </p>
-                <Button type="button" variant="outline" onClick={() => { window.location.href = '/habits'; }}>
+                <Button type="button" variant="outline" onClick={goToNewHabit}>
                   Crear hábitos
                 </Button>
               </div>
@@ -115,6 +116,11 @@ export function WinterArcSetup() {
                   })}
                 </fieldset>
 
+                <Button type="button" variant="ghost" size="sm" className="w-fit text-muted-foreground" onClick={goToNewHabit}>
+                  <Plus aria-hidden="true" />
+                  Crear otro hábito
+                </Button>
+
                 <p className="text-xs text-muted-foreground" aria-live="polite">
                   {`Selecciona al menos ${WINTER_ARC_MIN_RULES} hábitos para comenzar el reto (${selected.size}/${WINTER_ARC_MIN_RULES})`}
                 </p>
@@ -135,4 +141,9 @@ export function WinterArcSetup() {
       </section>
     </WinterArcLayout>
   );
+}
+
+/** Crear habitos sin salir del camino Winter Arc. */
+function goToNewHabit() {
+  window.location.href = '/winter-arc/nuevo-habito';
 }

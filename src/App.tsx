@@ -8,6 +8,7 @@ import { Habits } from './pages/Habits';
 import { Market } from './pages/Market';
 import { WinterArc } from './pages/WinterArc';
 import { WinterArcSetup } from './pages/WinterArcSetup';
+import { WinterArcNewHabit } from './pages/WinterArcNewHabit';
 import { WinterArcGate } from './components/WinterArcGate';
 import { SelectApp } from './pages/SelectApp';
 import { CHOOSER_PATH } from './lib/paths';
@@ -19,6 +20,7 @@ export default function App() {
   if (currentPath === '/habits') return <Habits />;
   if (currentPath === '/winter-arc') return <WinterArcGate><WinterArc /></WinterArcGate>;
   if (currentPath === '/winter-arc/setup') return <WinterArcGate><WinterArcSetup /></WinterArcGate>;
+  if (currentPath === '/winter-arc/nuevo-habito') return <WinterArcGate><WinterArcNewHabit /></WinterArcGate>;
 
   return (
     <AppLayout currentPath={currentPath}>
