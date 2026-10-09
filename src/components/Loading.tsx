@@ -1,4 +1,3 @@
-import { Snowflake } from 'lucide-react';
 import KaizenLogo from './KaizenLogo';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '../lib/utils';
@@ -72,10 +71,11 @@ export function PathSplash({ path, action = 'Cargando', className }: PathSplashP
         )}
         {path === 'winter-arc' && (
           <span
+            lang="ja"
             aria-hidden="true"
-            className="grid size-18 animate-pulse place-items-center rounded-full bg-[#cfe8f5] text-[#0b1624] shadow-lg shadow-[#7cc4e8]/40"
+            className="grid size-18 animate-pulse place-items-center rounded-full bg-[#cfe8f5] text-3xl font-bold text-[#0b1624] shadow-lg shadow-[#7cc4e8]/40"
           >
-            <Snowflake className="size-9" />
+            侍
           </span>
         )}
         <p className={cn('text-sm font-medium tracking-wide', SPLASH_TEXT_CLASS[path])}>{SPLASH_NAME[path]}</p>

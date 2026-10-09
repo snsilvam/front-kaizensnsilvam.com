@@ -4,13 +4,14 @@ import type { WinterArc, WinterArcAnalytics, WinterArcDay, WinterArcGrid } from 
 /**
  * POST /api/winter-arc/setup: inicia el reto de 90 días con los hábitos
  * elegidos como Reglas Inquebrantables. El backend exige al menos 3 distintos.
+ * `commitment` es el propósito del reto (máx. 500 caracteres).
  */
-export function setupWinterArc(habitIds: string[]): Promise<WinterArc> {
+export function setupWinterArc(habitIds: string[], commitment: string): Promise<WinterArc> {
   return request<WinterArc>(
     '/api/winter-arc/setup',
     {
       method: 'POST',
-      body: JSON.stringify({ habit_ids: habitIds }),
+      body: JSON.stringify({ habit_ids: habitIds, commitment }),
     },
     false,
   );

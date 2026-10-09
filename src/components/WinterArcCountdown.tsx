@@ -51,8 +51,9 @@ export function WinterArcCountdown({ opensOn, opensAt, onOpen }: WinterArcCountd
           ¿Qué es el Winter Arc?
         </h1>
         <p className="text-base text-pretty text-foreground/80">
-          Un reto de 90 días: eliges tus hábitos y los cumples cada día, sin excusas. Mientras el resto espera la
-          primavera, tú usas el invierno para volverte más fuerte, un día a la vez.
+          Un reto de 90 días para forjar un samurái. Tu cuerpo deja de ser una máquina de placer y obedece a un solo
+          código: tus hábitos, cumplidos cada día, sin excusas. Mientras el resto espera la primavera, tú te forjas en
+          el invierno.
         </p>
       </section>
 

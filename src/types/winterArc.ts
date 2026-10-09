@@ -6,6 +6,9 @@ export const WINTER_ARC_MIN_RULES = 3;
 /** Días fallados seguidos con los que se pierde el reto. La regla vive en el backend. */
 export const WINTER_ARC_MAX_CONSECUTIVE_FAILURES = 3;
 
+/** El backend limita el compromiso del reto a 500 caracteres. */
+export const WINTER_ARC_MAX_COMMITMENT = 500;
+
 /**
  * Lo decide el Juez Nocturno al cerrar cada día (23:59, America/Bogota).
  * `failed`: se perdió por acumular 3 días fallados seguidos.
@@ -20,6 +23,8 @@ export interface WinterArcRule {
 
 export interface WinterArc {
   id: string;
+  /** Respuesta a "¿Cuál es tu compromiso con tu yo de enero?"; vacío en retos anteriores a la pregunta. */
+  commitment: string;
   /** Primer día del reto, YYYY-MM-DD. Lo decide el servidor. */
   start_date: string;
   /** Último día del reto (inclusivo), YYYY-MM-DD. */
@@ -41,6 +46,8 @@ export interface WinterArcDay {
 /** Respuesta de GET /api/winter-arc/:id/grid. */
 export interface WinterArcGrid {
   id: string;
+  /** Propósito del reto; vacío en retos anteriores a la pregunta. */
+  commitment: string;
   start_date: string;
   end_date: string;
   status: WinterArcStatus;
@@ -52,6 +59,18 @@ export interface WinterArcGrid {
   failed_on_day: number | null;
   /** Los 90 días del reto en orden cronológico. */
   days: WinterArcDay[];
+  /** Las Reglas Inquebrantables en el orden del día, como las ordena el backend. */
+  schedule: WinterArcScheduleItem[];
+}
+
+/** Una Regla Inquebrantable en el horario del día. */
+export interface WinterArcScheduleItem {
+  habit_id: string;
+  name: string;
+  /** Hora del hábito "HH:MM" (24 h); null si no tiene una. */
+  time: string | null;
+  /** Ya tiene repetición hoy en Kaizen Habits. Siempre false si el reto no está activo. */
+  done_today: boolean;
 }
 
 // Contrato de GET /api/winter-arc/:id/analytics: la retrospectiva de un reto terminado.

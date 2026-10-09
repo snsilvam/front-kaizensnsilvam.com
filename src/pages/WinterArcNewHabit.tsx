@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { ArrowLeft, Snowflake } from 'lucide-react';
+import { ArrowLeft, Swords } from 'lucide-react';
 import { WinterArcLayout } from '../components/WinterArcLayout';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
@@ -93,7 +93,7 @@ export function WinterArcNewHabit() {
           onClick={goToSetup}
         >
           <ArrowLeft aria-hidden="true" />
-          Volver a elegir reglas
+          Volver a mi código
         </Button>
 
         <Card>
@@ -102,8 +102,8 @@ export function WinterArcNewHabit() {
               Nueva Regla Inquebrantable
             </CardTitle>
             <CardDescription>
-              Un hábito que cumplirás cada día durante 90 días. Define también el mínimo que harás incluso en el
-              peor día: también cuenta.
+              Un hábito que el samurái cumplirá cada día durante 90 días, quiera o no el cuerpo. Define también el
+              mínimo que harás incluso en el peor día: también cuenta.
             </CardDescription>
           </CardHeader>
 
@@ -116,7 +116,7 @@ export function WinterArcNewHabit() {
                 <Field label="Mínimo innegociable (2 min)" name="minimumAction2min" value={rule.minimumAction2min} onChange={updateField} required placeholder="Ej. 10 flexiones" />
                 <Field label="Señal" name="cue" value={rule.cue} onChange={updateField} placeholder="Después de..." />
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Hora" name="time" type="time" value={rule.time} onChange={updateField} />
+                  <Field label="Hora del día" name="time" type="time" value={rule.time} onChange={updateField} required />
                   <Field label="Lugar" name="location" value={rule.location} onChange={updateField} placeholder="Ej. Habitación" />
                 </div>
               </fieldset>
@@ -129,8 +129,8 @@ export function WinterArcNewHabit() {
 
               {created && (
                 <Alert>
-                  <Snowflake aria-hidden="true" />
-                  <AlertDescription>{`"${created}" ya es uno de tus hábitos activos.`}</AlertDescription>
+                  <Swords aria-hidden="true" />
+                  <AlertDescription>{`"${created}" está forjado: ya puede entrar en tu código.`}</AlertDescription>
                 </Alert>
               )}
 
@@ -145,12 +145,12 @@ export function WinterArcNewHabit() {
           <div className="grid gap-3 rounded-xl border px-4 py-3.5 text-sm" aria-live="polite">
             <p className="text-muted-foreground">
               {readyForSetup
-                ? `Tienes ${activeCount} hábitos activos: ya puedes armar tu reto.`
-                : `Tienes ${activeCount} de ${WINTER_ARC_MIN_RULES} hábitos activos que necesita el reto.`}
+                ? `Tienes ${activeCount} hábitos activos: ya puedes jurar tu código.`
+                : `Tienes ${activeCount} de ${WINTER_ARC_MIN_RULES} hábitos activos que necesita el código del samurái.`}
             </p>
             {readyForSetup && (
               <Button type="button" variant="outline" className="w-fit" onClick={goToSetup}>
-                Elegir mis Reglas Inquebrantables
+                Elegir mi código
               </Button>
             )}
           </div>

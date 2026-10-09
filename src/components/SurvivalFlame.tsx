@@ -53,8 +53,8 @@ const COUNT_CLASS: Record<FlameLevel, string> = {
 };
 
 const FLAME_LABEL: Record<FlameLevel, string> = {
-  burning: 'Llama encendida: ningún día fallado seguido',
-  weak: 'Llama débil: 1 día fallado',
-  dying: 'Llama casi apagada: 2 días fallados seguidos. Un fallo más termina el reto',
+  burning: 'Llama encendida: ningún día cedido al placer',
+  weak: 'Llama débil: 1 día cedido al placer',
+  dying: 'Llama casi apagada: 2 días seguidos cedidos al placer. Uno más termina el reto',
   ashes: 'Llama apagada: el reto terminó',
 };

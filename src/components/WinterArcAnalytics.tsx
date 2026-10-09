@@ -59,8 +59,8 @@ export function WinterArcAnalytics({ winterArcId }: WinterArcAnalyticsProps) {
         </h2>
         <p className="text-sm text-muted-foreground">
           {status === 'completed'
-            ? 'Sobreviviste al invierno. Esto es lo que aprendiste de ti.'
-            : 'La llama se apagó, pero lo que construiste sigue ahí. Esto es lo que aprendiste de ti.'}
+            ? 'Sobreviviste al invierno: el samurái está forjado. Esto es lo que aprendiste de ti.'
+            : 'La llama se apagó, pero el acero que forjaste sigue ahí. Esto es lo que aprendiste de ti.'}
         </p>
       </div>
 
