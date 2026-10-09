@@ -129,9 +129,9 @@ export function SelectApp() {
             path="winter-arc"
             eyebrow="Reto de 90 días"
             title="Winter Arc"
-            tagline="Todo el invierno, sin excusas."
-            features={['Tus hábitos se vuelven reglas inquebrantables', 'Tres fallos seguidos apagan la llama']}
-            cta={winterArcOpen ? 'Aceptar el reto' : 'Ver la cuenta atrás'}
+            tagline="Se apaga el placer. Se enciende el samurái."
+            features={['Cada repetición de tus hábitos forja al samurái', 'Tres días cedidos al placer apagan la llama']}
+            cta={winterArcOpen ? 'Activar modo samurái' : 'Ver la cuenta atrás'}
             badge={winterArcOpen ? undefined : `Abre el ${formatDayKey(WINTER_ARC_OPENS_ON)}`}
             disabled={entering !== null}
             onEnter={enter}

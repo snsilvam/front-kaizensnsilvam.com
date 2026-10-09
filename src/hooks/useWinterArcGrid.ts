@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { getWinterArcGrid } from '../services/winterArc';
 import type { WinterArcGrid } from '../types/winterArc';
 
-interface UseWinterArcGrid {
+export interface UseWinterArcGrid {
   data: WinterArcGrid | null;
   loading: boolean;
   error: string | null;

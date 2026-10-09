@@ -14,6 +14,7 @@ import { formatMoney } from '../services/format';
 import { MARKET_CURRENCY } from '../services/market';
 import { markPendingPaymentAsPaid } from '../services/pendingPayments';
 import { useMarket } from '../hooks/useMarket';
+import { PATH_HOME } from '../lib/paths';
 import type { MarketStatus } from '../types/market';
 
 /**
@@ -68,7 +69,7 @@ export function MarketCart({ budgetId }: MarketCartProps) {
 
     try {
       await markPendingPaymentAsPaid(budgetId);
-      window.location.href = '/';
+      window.location.href = PATH_HOME.finanzas;
     } catch (requestError) {
       setCloseError(
         requestError instanceof Error ? requestError.message : 'No fue posible cerrar la compra.',

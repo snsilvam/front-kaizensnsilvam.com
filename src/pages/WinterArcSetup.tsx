@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
+import { Plus, Swords } from 'lucide-react';
 import { ErrorMessage } from '../components/ErrorMessage';
+import { WinterArcCommitmentDialog } from '../components/WinterArcCommitmentDialog';
 import { WinterArcLayout } from '../components/WinterArcLayout';
-import { Alert, AlertDescription } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
@@ -10,10 +11,11 @@ import { ApiError } from '../services/api';
 import { setupWinterArc } from '../services/winterArc';
 import { WINTER_ARC_MIN_RULES } from '../types/winterArc';
 
-/** Configuración del Winter Arc: elegir los hábitos que serán Reglas Inquebrantables. */
+/** Configuración del Winter Arc: elegir las Reglas Inquebrantables y, en un modal, el compromiso del reto. */
 export function WinterArcSetup() {
   const habits = useKaizenHabits();
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [askingCommitment, setAskingCommitment] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -30,14 +32,25 @@ export function WinterArcSetup() {
     });
   }
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  // Elegidos los hábitos, falta el propósito del reto: se pide en un modal.
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!canSubmit) return;
+    setSubmitError(null);
+    setAskingCommitment(true);
+  }
 
+  function closeCommitment() {
+    if (submitting) return;
+    setAskingCommitment(false);
+    setSubmitError(null);
+  }
+
+  async function start(commitment: string) {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await setupWinterArc([...selected]);
+      await setupWinterArc([...selected], commitment);
       // El inicio del modulo abre el reto mas reciente: el que se acaba de crear.
       window.location.href = '/winter-arc';
     } catch (err: unknown) {
@@ -57,11 +70,15 @@ export function WinterArcSetup() {
       <section className="mx-auto w-full max-w-md" aria-labelledby="winter-arc-setup-title">
         <Card>
           <CardHeader>
+            <p className="text-[0.62rem] font-semibold tracking-[0.22em] text-[#1d6a8f] uppercase">
+              Paso 1 de 2 · El código
+            </p>
             <CardTitle id="winter-arc-setup-title" className="text-2xl font-bold tracking-[-0.04em]">
-              Winter Arc
+              Elige tu código
             </CardTitle>
             <CardDescription>
-              90 días de disciplina. Elige los hábitos que serán tus Reglas Inquebrantables.
+              Los hábitos que marques serán tus Reglas Inquebrantables: durante 90 días, lo único que el cuerpo
+              obedece. El placer ya no vota.
             </CardDescription>
           </CardHeader>
 
@@ -81,11 +98,11 @@ export function WinterArcSetup() {
             {!habits.loading && !habits.error && activeHabits.length < WINTER_ARC_MIN_RULES && (
               <div className="grid gap-3 text-sm text-muted-foreground">
                 <p>
-                  Necesitas al menos {WINTER_ARC_MIN_RULES} hábitos activos para comenzar el reto. Tienes{' '}
+                  El código de un samurái necesita al menos {WINTER_ARC_MIN_RULES} hábitos activos. Tienes{' '}
                   {activeHabits.length}.
                 </p>
-                <Button type="button" variant="outline" onClick={() => { window.location.href = '/habits'; }}>
-                  Crear hábitos
+                <Button type="button" variant="outline" onClick={goToNewHabit}>
+                  Forjar hábitos
                 </Button>
               </div>
             )}
@@ -115,24 +132,38 @@ export function WinterArcSetup() {
                   })}
                 </fieldset>
 
+                <Button type="button" variant="ghost" size="sm" className="w-fit text-muted-foreground" onClick={goToNewHabit}>
+                  <Plus aria-hidden="true" />
+                  Forjar otro hábito
+                </Button>
+
                 <p className="text-xs text-muted-foreground" aria-live="polite">
-                  {`Selecciona al menos ${WINTER_ARC_MIN_RULES} hábitos para comenzar el reto (${selected.size}/${WINTER_ARC_MIN_RULES})`}
+                  {`Elige al menos ${WINTER_ARC_MIN_RULES} hábitos para tu código (${selected.size}/${WINTER_ARC_MIN_RULES})`}
                 </p>
 
-                {submitError && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{submitError}</AlertDescription>
-                  </Alert>
-                )}
-
                 <Button type="submit" size="lg" disabled={!canSubmit}>
-                  {submitting ? 'Iniciando...' : 'Iniciar Winter Arc'}
+                  <Swords aria-hidden="true" />
+                  Jurar mi código
                 </Button>
               </form>
             )}
           </CardContent>
         </Card>
       </section>
+
+      {askingCommitment && (
+        <WinterArcCommitmentDialog
+          submitting={submitting}
+          error={submitError}
+          onClose={closeCommitment}
+          onConfirm={start}
+        />
+      )}
     </WinterArcLayout>
   );
+}
+
+/** Crear habitos sin salir del camino Winter Arc. */
+function goToNewHabit() {
+  window.location.href = '/winter-arc/nuevo-habito';
 }

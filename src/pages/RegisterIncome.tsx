@@ -13,6 +13,7 @@ import { MoneyInput, parseMoney } from '../components/MoneyInput';
 import { PageHeader } from '../components/PageHeader';
 import { SuggestionChips } from '../components/SuggestionChips';
 import { useIncomes } from '../hooks/useIncomes';
+import { PATH_HOME } from '../lib/paths';
 import { deleteIncome, registerIncome } from '../services/incomes';
 
 const CURRENCY = 'COP';
@@ -138,7 +139,7 @@ export function RegisterIncome() {
                   <CircleCheck aria-hidden="true" />
                   <AlertDescription className="flex flex-wrap items-center justify-between gap-2">
                     {success}
-                    <a href="/" className="inline-flex items-center gap-1 font-semibold no-underline">
+                    <a href={PATH_HOME.finanzas} className="inline-flex items-center gap-1 font-semibold no-underline">
                       Ver resumen <ArrowRight aria-hidden="true" className="size-3.5" />
                     </a>
                   </AlertDescription>

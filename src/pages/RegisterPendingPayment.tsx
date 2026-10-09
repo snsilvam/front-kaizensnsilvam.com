@@ -9,6 +9,7 @@ import { DateTimePicker } from '../components/DateTimePicker';
 import { MoneyInput, parseMoney } from '../components/MoneyInput';
 import { PageHeader } from '../components/PageHeader';
 import { usePendingPaymentCategories } from '../hooks/usePendingPaymentCategories';
+import { PATH_HOME } from '../lib/paths';
 import {
   registerPendingPayment,
   type PendingPaymentCategory,
@@ -91,7 +92,7 @@ export function RegisterPendingPayment() {
             }
           : {
               message: 'Gasto pendiente registrado.',
-              goTo: { href: '/', label: 'Ver resumen' },
+              goTo: { href: PATH_HOME.finanzas, label: 'Ver resumen' },
             },
       );
       setName('');

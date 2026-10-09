@@ -190,6 +190,31 @@
   }
 }
 
+/* --- Winter Arc, la piel del modulo ---------------------------------------
+   Dentro del Winter Arc el primario deja de ser el verde de finanzas: es la
+   noche polar del samurai, con el azul de la escarcha en el foco. Como el tema
+   es `inline`, basta con redefinir las variables en el contenedor del modulo
+   (WinterArcLayout); lo que se pinta fuera de el, como los menus en portal,
+   conserva la paleta general. */
+@layer base {
+  .winter-arc-theme {
+    --background: #f3f6f8;
+    --foreground: #0f1c28;
+    --card-foreground: #0f1c28;
+    --primary: #0b1624;
+    --primary-foreground: #eef7fc;
+    --accent: #e4f0f6;
+    --accent-foreground: #0b1624;
+    --muted: #edf1f4;
+    --muted-foreground: #56656f;
+    --border: #dde5ea;
+    --input: #cfdae1;
+    --ring: #2b7fa8;
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+}
+
 /* --- Winter Arc, la llama de supervivencia --------------------------------
    Sana arde con un vaivén suave; con 2 fallos seguidos parpadea como si se
    fuera a apagar. El color y el tamaño los pone Tailwind en SurvivalFlame. */
@@ -275,6 +300,76 @@
 
     .winter-ice-hit,
     .winter-ember {
+      animation: none;
+    }
+  }
+}
+
+/* --- Winter Arc, el manifiesto --------------------------------------------
+   Los interruptores del cuerpo: al aparecer se apaga la máquina de placer y,
+   después, se enciende el samurái. Tailwind deja cada uno en su estado final;
+   las animaciones sólo dicen de dónde vienen (`from` sin `to`), así que sin
+   movimiento se ven ya accionados. */
+@keyframes winter-switch-off-track {
+  from { background-color: #c8362d; }
+}
+
+@keyframes winter-switch-off-knob {
+  from { translate: 1.25rem 0; background-color: #f4efe4; }
+}
+
+@keyframes winter-switch-on-track {
+  from { background-color: rgb(238 247 252 / 0.1); }
+}
+
+@keyframes winter-switch-on-knob {
+  from { translate: 0 0; background-color: rgb(238 247 252 / 0.4); }
+}
+
+@keyframes winter-mode-off {
+  from { opacity: 1; text-decoration-color: transparent; }
+}
+
+@keyframes winter-mode-status {
+  from { opacity: 0; }
+}
+
+@layer components {
+  .winter-switch-off,
+  .winter-switch-off > .winter-switch-knob,
+  .winter-mode-off,
+  .winter-mode-status-off {
+    animation-duration: 0.4s;
+    animation-timing-function: ease-in;
+    animation-delay: 0.6s;
+    animation-fill-mode: both;
+  }
+
+  .winter-switch-on,
+  .winter-switch-on > .winter-switch-knob,
+  .winter-mode-status-on {
+    animation-duration: 0.45s;
+    animation-timing-function: ease-out;
+    animation-delay: 1.3s;
+    animation-fill-mode: both;
+  }
+
+  .winter-switch-off { animation-name: winter-switch-off-track; }
+  .winter-switch-off > .winter-switch-knob { animation-name: winter-switch-off-knob; }
+  .winter-switch-on { animation-name: winter-switch-on-track; }
+  .winter-switch-on > .winter-switch-knob { animation-name: winter-switch-on-knob; }
+  .winter-mode-off { animation-name: winter-mode-off; }
+  .winter-mode-status-off,
+  .winter-mode-status-on { animation-name: winter-mode-status; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .winter-switch-off,
+    .winter-switch-off > .winter-switch-knob,
+    .winter-switch-on,
+    .winter-switch-on > .winter-switch-knob,
+    .winter-mode-off,
+    .winter-mode-status-off,
+    .winter-mode-status-on {
       animation: none;
     }
   }

@@ -1,5 +1,5 @@
 import { Menu } from '@base-ui/react/menu';
-import { Check, ChevronDown, Compass, LayoutGrid, Snowflake, WalletCards } from 'lucide-react';
+import { Check, ChevronDown, Compass, LayoutGrid, WalletCards } from 'lucide-react';
 import { buttonVariants } from './ui/button';
 import { cn } from '../lib/utils';
 import { CHOOSER_PATH, PATH_HOME, type PathId } from '../lib/paths';
@@ -8,7 +8,7 @@ import { isWinterArcOpen, WINTER_ARC_OPENS_ON } from '../lib/winterArcOpening';
 
 /**
  * El sello de cada camino: billetera en verde bosque, el ideograma 道 sobre el
- * disco rojo del dojo y el copo sobre hielo. Se repite en el selector de
+ * disco rojo del dojo y el samurái 侍 sobre hielo. Se repite en el selector de
  * caminos, en el menu del header y en la cortina de entrada, para que cada
  * camino se reconozca de un vistazo.
  */
@@ -30,7 +30,11 @@ export function PathMark({ path, size = 'sm' }: { path: PathId; size?: 'sm' | 'l
           道
         </span>
       )}
-      {path === 'winter-arc' && <Snowflake className={large ? 'size-6' : 'size-4'} />}
+      {path === 'winter-arc' && (
+        <span lang="ja" className={cn('font-bold', large ? 'text-lg' : 'text-sm')}>
+          侍
+        </span>
+      )}
     </span>
   );
 }
@@ -129,7 +133,7 @@ export function PathSwitcher({ current, tone = 'light' }: PathSwitcherProps) {
 const PATHS: { id: PathId; label: string; hint: string }[] = [
   { id: 'finanzas', label: 'Finanzas', hint: 'Cuánto puedes gastar hoy' },
   { id: 'habitos', label: 'Hábitos', hint: 'Un día más, una repetición más' },
-  { id: 'winter-arc', label: 'Winter Arc', hint: 'El reto de 90 días' },
+  { id: 'winter-arc', label: 'Winter Arc', hint: 'Forja al samurái en 90 días' },
 ];
 
 const TRIGGER_CLASS: Record<NonNullable<PathSwitcherProps['tone']>, string> = {
