@@ -4,12 +4,15 @@
  */
 export type PathId = 'finanzas' | 'habitos' | 'winter-arc';
 
-/** Donde se eligen los caminos. Tambien aparece sola despues de cada login. */
+/**
+ * Donde se eligen los caminos. Es el indice de la app: la raiz y cualquier
+ * ruta desconocida llevan aqui. Tambien aparece sola despues de cada login.
+ */
 export const CHOOSER_PATH = '/caminos';
 
 /** Pagina de inicio de cada camino. */
 export const PATH_HOME: Record<PathId, string> = {
-  finanzas: '/',
+  finanzas: '/finanzas',
   habitos: '/habits',
   'winter-arc': '/winter-arc',
 };

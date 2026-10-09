@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { useAuth } from '../auth/useAuth';
 import { PathSwitcher } from './PathSwitcher';
+import { PATH_HOME } from '../lib/paths';
 import { UserAvatar } from './UserAvatar';
 import { HabitsHeader } from './HabitsHeader';
 import { HamburgerMenu } from './HamburgerMenu';
@@ -18,7 +19,7 @@ interface AppLayoutProps {
 // Enlaces del modo finanzas: los mismos en el header de escritorio y en las
 // pestañas de movil.
 const NAV_LINKS: FinanceLink[] = [
-  { href: '/', label: 'Inicio', icon: House },
+  { href: PATH_HOME.finanzas, label: 'Inicio', icon: House },
   { href: '/ingresos', label: 'Ingresos', icon: Wallet },
   { href: '/gastos', label: 'Gastos', icon: Receipt },
   { href: '/mercado', label: 'Mercado', icon: ShoppingCart },
@@ -55,8 +56,8 @@ export function AppLayout({ children, currentPath }: AppLayoutProps) {
         <div className="relative mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <a
             className="inline-flex items-center gap-2.5 text-foreground no-underline"
-            href="/"
-            aria-label="Kaizen, ir al inicio"
+            href={PATH_HOME.finanzas}
+            aria-label="Kaizen Finanzas, ir al inicio de finanzas"
           >
             <KaizenLogo
               width={40}
