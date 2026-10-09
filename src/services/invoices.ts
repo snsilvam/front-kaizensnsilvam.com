@@ -1,4 +1,4 @@
-import { ApiError, request, requestBlob } from './api';
+import { ApiError, request } from './api';
 import type { Invoice } from '../types/invoice';
 
 interface ListInvoicesResponse {
@@ -6,8 +6,8 @@ interface ListInvoicesResponse {
 }
 
 /**
- * POST /invoices: sube la foto y el backend la lee con Claude.
- * Puede tardar varios segundos.
+ * POST /invoices: sube la foto y el backend la lee con Claude. Solo se
+ * guardan los datos extraídos, no la foto. Puede tardar varios segundos.
  */
 export function captureInvoice(image: Blob): Promise<Invoice> {
   const form = new FormData();
@@ -22,14 +22,17 @@ export function listInvoices(): Promise<Invoice[]> {
   );
 }
 
-/** GET /invoices/:id/image: la foto original. */
-export function getInvoiceImage(invoiceId: string): Promise<Blob> {
-  return requestBlob(`/invoices/${encodeURIComponent(invoiceId)}/image`);
-}
-
-/** DELETE /invoices/:id: borra la factura y su foto. */
+/** DELETE /invoices/:id: borra la factura. */
 export function deleteInvoice(invoiceId: string): Promise<unknown> {
   return request<unknown>(`/invoices/${encodeURIComponent(invoiceId)}`, { method: 'DELETE' }, false);
+}
+
+/**
+ * El backend responde 403 en todo /invoices cuando el usuario no tiene
+ * habilitado el módulo de facturas con IA (users.ia_feature en false).
+ */
+export function isFeatureDisabled(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 403;
 }
 
 /** Lo que el usuario lee cuando una captura falla, según el status del backend. */

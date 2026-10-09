@@ -5,20 +5,21 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Skeleton } from '../components/ui/skeleton';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
+import { FeatureUnavailableDialog } from '../components/FeatureUnavailableDialog';
 import { InvoiceDetailDialog } from '../components/InvoiceDetailDialog';
 import { InvoiceList, issuerLabel } from '../components/InvoiceList';
 import { PageHeader } from '../components/PageHeader';
 import { useInvoices } from '../hooks/useInvoices';
 import { compressInvoiceImage } from '../lib/imageCompression';
 import { formatMoney } from '../services/format';
-import { captureErrorMessage, captureInvoice, deleteInvoice } from '../services/invoices';
+import { captureErrorMessage, captureInvoice, deleteInvoice, isFeatureDisabled } from '../services/invoices';
 import type { Invoice } from '../types/invoice';
 
 const CURRENCY = 'COP';
 
 /**
  * Facturas: se capturan con una foto, sin formulario. El backend lee los datos
- * con un modelo de lenguaje y guarda la foto original.
+ * con un modelo de lenguaje y guarda solo esos datos, no la foto.
  */
 export function Invoices() {
   const invoices = useInvoices();
@@ -34,6 +35,12 @@ export function Invoices() {
   const [toDelete, setToDelete] = useState<Invoice | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+
+  // El módulo exige users.ia_feature en true. El backend responde 403 en
+  // cualquier operación si no: al abrir la página (listado) o, si se apagó
+  // mientras estaba abierta, al capturar o borrar.
+  const [actionForbidden, setActionForbidden] = useState(false);
+  const unavailable = invoices.forbidden || actionForbidden;
 
   async function capture(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -55,7 +62,8 @@ export function Invoices() {
       setCaptured(invoice);
       invoices.reload();
     } catch (error) {
-      setCaptureError(captureErrorMessage(error));
+      if (isFeatureDisabled(error)) setActionForbidden(true);
+      else setCaptureError(captureErrorMessage(error));
     } finally {
       setCapturing(false);
       setPreview(null);
@@ -75,7 +83,12 @@ export function Invoices() {
       setToDelete(null);
       invoices.reload();
     } catch (error) {
-      setDeleteError(error instanceof Error ? error.message : 'No fue posible eliminar la factura.');
+      if (isFeatureDisabled(error)) {
+        setSelected(null);
+        setActionForbidden(true);
+      } else {
+        setDeleteError(error instanceof Error ? error.message : 'No fue posible eliminar la factura.');
+      }
       setToDelete(null);
     } finally {
       setIsDeleting(false);
@@ -83,6 +96,15 @@ export function Invoices() {
   }
 
   const count = invoices.data?.length ?? 0;
+
+  if (unavailable) {
+    return (
+      <section aria-labelledby="invoices-title">
+        <PageHeader id="invoices-title" eyebrow="Facturas" title="Tus facturas" />
+        <FeatureUnavailableDialog open />
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="invoices-title">
@@ -165,7 +187,7 @@ export function Invoices() {
         <CardHeader>
           <CardTitle className="text-lg font-semibold">Guardadas</CardTitle>
           <CardDescription>
-            {count === 1 ? '1 factura' : `${count} facturas`}. Toca una para ver la foto y el detalle.
+            {count === 1 ? '1 factura' : `${count} facturas`}. Toca una para ver el detalle.
           </CardDescription>
         </CardHeader>
         <CardContent>

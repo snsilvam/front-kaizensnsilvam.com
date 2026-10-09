@@ -43,23 +43,6 @@ export async function request<T>(
   return (await readBody<T>(response)) as T;
 }
 
-/**
- * GET de un archivo protegido (p. ej. la foto de una factura). Un <img src>
- * no puede mandar el ID token, así que se descarga como Blob y se muestra con
- * URL.createObjectURL.
- */
-export async function requestBlob(path: string): Promise<Blob> {
-  const response = await fetch(`${BASE_URL}${path}`, {
-    headers: await authorizationHeader(),
-  });
-
-  if (!response.ok) {
-    throw new ApiError(await readErrorMessage(response), response.status);
-  }
-
-  return response.blob();
-}
-
 /** Solicitud a un endpoint publico cuya URL no depende de variables de entorno. */
 export async function publicRequest<T>(url: string, init: RequestInit = {}): Promise<T> {
   const response = await fetch(url, {

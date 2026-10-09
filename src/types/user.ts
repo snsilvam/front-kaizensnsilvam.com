@@ -16,4 +16,6 @@ export interface AppUser {
   signInProvider: string;
   createdAt: string;
   lastLoginAt: string;
+  /** Módulo de facturas con IA habilitado. Se activa a mano en la base. */
+  iaFeature: boolean;
 }

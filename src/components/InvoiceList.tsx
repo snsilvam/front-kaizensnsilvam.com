@@ -13,7 +13,7 @@ export function issuerLabel(invoice: Invoice): string {
   return invoice.issuerName || 'Comercio sin nombre';
 }
 
-/** Lista de facturas guardadas; cada una abre su detalle con la foto. */
+/** Lista de facturas guardadas; cada una abre su detalle. */
 export function InvoiceList({ items, currency, onSelect }: InvoiceListProps) {
   if (items.length === 0) {
     return (
