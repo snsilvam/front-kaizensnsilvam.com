@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { House, LogOut, Receipt, ShoppingCart, Wallet } from 'lucide-react';
+import { House, LogOut, Receipt, ScanText, ShoppingCart, Wallet } from 'lucide-react';
 import KaizenLogo from './KaizenLogo';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
@@ -22,6 +22,7 @@ const NAV_LINKS: FinanceLink[] = [
   { href: '/ingresos', label: 'Ingresos', icon: Wallet },
   { href: '/gastos', label: 'Gastos', icon: Receipt },
   { href: '/mercado', label: 'Mercado', icon: ShoppingCart },
+  { href: '/facturas', label: 'Facturas', icon: ScanText },
 ];
 
 export function AppLayout({ children, currentPath }: AppLayoutProps) {

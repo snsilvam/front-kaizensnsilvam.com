@@ -6,6 +6,7 @@ import { Sebas } from './pages/Sebas';
 import { AppLayout } from './components/AppLayout';
 import { Habits } from './pages/Habits';
 import { Market } from './pages/Market';
+import { Invoices } from './pages/Invoices';
 import { WinterArc } from './pages/WinterArc';
 import { WinterArcSetup } from './pages/WinterArcSetup';
 import { WinterArcGate } from './components/WinterArcGate';
@@ -22,7 +23,7 @@ export default function App() {
 
   return (
     <AppLayout currentPath={currentPath}>
-      {currentPath === '/sebas' ? <Sebas /> : currentPath === '/ingresos' ? <RegisterIncome /> : currentPath === '/gastos' ? <RegisterPendingPayment /> : currentPath === '/habito-1' ? <RegisterHabit1 /> : currentPath === '/mercado' ? <Market /> : <Home />}
+      {currentPath === '/sebas' ? <Sebas /> : currentPath === '/ingresos' ? <RegisterIncome /> : currentPath === '/gastos' ? <RegisterPendingPayment /> : currentPath === '/habito-1' ? <RegisterHabit1 /> : currentPath === '/mercado' ? <Market /> : currentPath === '/facturas' ? <Invoices /> : <Home />}
     </AppLayout>
   );
 }

@@ -27,7 +27,9 @@ export async function request<T>(
   const response = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
+      // Con FormData el navegador pone el Content-Type multipart con su
+      // boundary; forzar JSON rompería la subida de archivos.
+      ...(init.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
       ...(includeApiKey ? { 'X-API-Key': API_KEY } : {}),
       ...(await authorizationHeader()),
       ...init.headers,
@@ -39,6 +41,23 @@ export async function request<T>(
   }
 
   return (await readBody<T>(response)) as T;
+}
+
+/**
+ * GET de un archivo protegido (p. ej. la foto de una factura). Un <img src>
+ * no puede mandar el ID token, así que se descarga como Blob y se muestra con
+ * URL.createObjectURL.
+ */
+export async function requestBlob(path: string): Promise<Blob> {
+  const response = await fetch(`${BASE_URL}${path}`, {
+    headers: await authorizationHeader(),
+  });
+
+  if (!response.ok) {
+    throw new ApiError(await readErrorMessage(response), response.status);
+  }
+
+  return response.blob();
 }
 
 /** Solicitud a un endpoint publico cuya URL no depende de variables de entorno. */

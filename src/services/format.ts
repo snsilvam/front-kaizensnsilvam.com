@@ -24,6 +24,21 @@ export function formatDate(iso: string): string {
   return date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+/**
+ * "05 oct 2026" a partir de una fecha sin hora ("2026-10-05"). new Date() la
+ * leería como medianoche UTC, que en Colombia todavía es el día anterior: se
+ * arma como fecha local.
+ */
+export function formatDateOnly(yyyyMmDd: string): string {
+  const [year, month, day] = yyyyMmDd.split('-').map(Number);
+  if (!year || !month || !day) return yyyyMmDd;
+  return new Date(year, month - 1, day).toLocaleDateString('es-CO', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
 /** "12 oct": la fecha corta para listas, donde el año casi siempre sobra. */
 export function formatShortDate(iso: string): string {
   const date = new Date(iso);
