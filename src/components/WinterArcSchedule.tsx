@@ -1,11 +1,15 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Check, Clock, Swords } from 'lucide-react';
+import { Check, Clock, Plus, Swords } from 'lucide-react';
+import { HabitRepetitionDialog } from './HabitRepetitionDialog';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
+import { useKaizenHabits } from '../hooks/useKaizenHabits';
 import type { UseWinterArcGrid } from '../hooks/useWinterArcGrid';
 import { bogotaMinutesNow, clockMinutes, formatClock, formatDuration } from '../lib/dayClock';
 import { cn } from '../lib/utils';
+import { ApiError } from '../services/api';
+import { registerKaizenHabitRepetition } from '../services/kaizenHabits';
 import type { WinterArcScheduleItem } from '../types/winterArc';
 
 /** Cada cuánto se mueve el marcador de "ahora". */
@@ -26,9 +30,17 @@ interface Slot {
  * El orden y el "cumplido hoy" los da el backend en el grid; aquí sólo se
  * decide, con la hora de Bogotá, qué toca ahora, qué ya pasó y cuánto falta.
  * Sólo se muestra con el reto activo: es una agenda, no un registro.
+ *
+ * Cada regla pendiente se registra aquí mismo con el modal del dojo, siempre
+ * para el `today` del servidor; al guardar se recarga el grid.
  */
 export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
   const now = useBogotaMinutes();
+  // Sólo para mostrar la acción mínima de cada hábito en el modal.
+  const habits = useKaizenHabits();
+  const [registering, setRegistering] = useState<WinterArcScheduleItem | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   if (!grid.data) {
     return grid.error ? null : <Skeleton className="h-64 w-full rounded-xl" aria-label="Cargando la orden de hoy" />;
@@ -43,6 +55,37 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
   // El marcador va antes de la primera regla que todavía no llega a su hora.
   const nowIndex = slots.findIndex((slot) => slot.minutes > now);
   const markerAt = nowIndex === -1 ? slots.length : nowIndex;
+  const today = grid.data.today;
+
+  function openRegister(item: WinterArcScheduleItem) {
+    setSaveError('');
+    setRegistering(item);
+  }
+
+  async function saveRepetition(item: WinterArcScheduleItem, input: { isMinimum: boolean; description: string }) {
+    setSaving(true);
+    setSaveError('');
+
+    try {
+      await registerKaizenHabitRepetition(item.habit_id, {
+        occurredOn: today,
+        isMinimum: input.isMinimum,
+        description: input.description,
+      });
+      setRegistering(null);
+      grid.reload();
+    } catch (requestError) {
+      // 409: ya tenía repetición hoy (una por día); basta con refrescar el horario.
+      if (requestError instanceof ApiError && requestError.status === 409) {
+        setRegistering(null);
+        grid.reload();
+        return;
+      }
+      setSaveError(requestError instanceof Error ? requestError.message : 'No fue posible registrar la repetición.');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <Card>
@@ -70,6 +113,7 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
                 now={now}
                 marker={index === markerAt ? <NowMarker now={now} position={index === 0 ? 'first' : 'middle'} /> : null}
                 connector={index < slots.length - 1 || markerAt === slots.length}
+                onRegister={openRegister}
               />
             ))}
             {markerAt === slots.length && <NowMarker now={now} position="last" />}
@@ -84,7 +128,11 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
                 <li key={item.habit_id} className="flex items-center gap-2 text-sm">
                   <StateDot state={item.done_today ? 'done' : 'upcoming'} small />
                   <span className={cn('font-medium', item.done_today && 'text-muted-foreground')}>{item.name}</span>
-                  {item.done_today && <span className="text-xs text-[#1d6a8f]">cumplido</span>}
+                  {item.done_today ? (
+                    <span className="text-xs text-[#1d6a8f]">cumplido</span>
+                  ) : (
+                    <RegisterButton item={item} onRegister={openRegister} className="ml-auto" />
+                  )}
                 </li>
               ))}
             </ul>
@@ -102,6 +150,18 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
           <span className="text-xs text-muted-foreground">Lo que registres allí aparece aquí al volver.</span>
         </div>
       </CardContent>
+
+      {registering && (
+        <HabitRepetitionDialog
+          habitName={registering.name}
+          minimumAction={habits.data?.find((habit) => habit.id === registering.habit_id)?.minimumAction2min ?? ''}
+          dayKey={today}
+          saving={saving}
+          error={saveError}
+          onClose={() => setRegistering(null)}
+          onConfirm={(input) => saveRepetition(registering, input)}
+        />
+      )}
     </Card>
   );
 }
@@ -131,11 +191,13 @@ function SlotRow({
   now,
   marker,
   connector,
+  onRegister,
 }: {
   slot: Slot;
   now: number;
   marker: ReactNode;
   connector: boolean;
+  onRegister: (item: WinterArcScheduleItem) => void;
 }) {
   const { time, period } = formatClock(slot.minutes);
 
@@ -160,6 +222,7 @@ function SlotRow({
             {slot.item.name}
           </p>
           <p className={cn('mt-0.5 text-xs', STATE_TEXT_CLASS[slot.state])}>{stateLabel(slot, now)}</p>
+          {slot.state !== 'done' && <RegisterButton item={slot.item} onRegister={onRegister} className="mt-2" />}
         </div>
       </li>
     </>
@@ -194,6 +257,30 @@ function NowMarker({ now, position }: { now: number; position: 'first' | 'middle
         <span className="h-px flex-1 bg-linear-to-r from-[#2b7fa8]/60 to-transparent" />
       </span>
     </li>
+  );
+}
+
+function RegisterButton({
+  item,
+  onRegister,
+  className,
+}: {
+  item: WinterArcScheduleItem;
+  onRegister: (item: WinterArcScheduleItem) => void;
+  className?: string;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="xs"
+      className={className}
+      onClick={() => onRegister(item)}
+      aria-label={`Registrar repetición de ${item.name}`}
+    >
+      <Plus aria-hidden="true" />
+      Registrar
+    </Button>
   );
 }
 
