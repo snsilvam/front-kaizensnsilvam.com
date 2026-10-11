@@ -12,6 +12,7 @@ import { WinterArcSetup } from './pages/WinterArcSetup';
 import { WinterArcNewHabit } from './pages/WinterArcNewHabit';
 import { WinterArcGate } from './components/WinterArcGate';
 import { SelectApp } from './pages/SelectApp';
+import { Sleep } from './pages/Sleep';
 import { CHOOSER_PATH, PATH_HOME } from './lib/paths';
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
   if (currentPath === '/winter-arc') return <WinterArcGate><WinterArc /></WinterArcGate>;
   if (currentPath === '/winter-arc/setup') return <WinterArcGate><WinterArcSetup /></WinterArcGate>;
   if (currentPath === '/winter-arc/nuevo-habito') return <WinterArcGate><WinterArcNewHabit /></WinterArcGate>;
+  if (currentPath === PATH_HOME.sleep) return <Sleep />;
 
   const page = layoutPage(currentPath);
   // Una ruta desconocida cae en el indice de la app: el selector de caminos.
