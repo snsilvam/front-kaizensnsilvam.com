@@ -1,4 +1,3 @@
-import { PowerOff } from 'lucide-react';
 import { Snowfall } from './Snowfall';
 import { cn } from '../lib/utils';
 
@@ -99,26 +98,5 @@ function BodyMode({ on, title, detail }: { on: boolean; title: string; detail: s
         </span>
       </dd>
     </div>
-  );
-}
-
-/**
- * El manifiesto en una línea, para tenerlo presente mientras el reto está en
- * curso.
- */
-export function WinterArcBodyStatus() {
-  return (
-    <ul aria-label="Estado del cuerpo durante el reto" className="flex flex-wrap gap-2 text-xs">
-      <li className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-muted-foreground">
-        <PowerOff aria-hidden="true" className="size-3.5" />
-        <span className="line-through decoration-[#c8362d] decoration-2">Máquina de placer</span>
-        <span className="text-[0.6rem] font-semibold tracking-[0.14em] uppercase">desactivada</span>
-      </li>
-      <li className="inline-flex items-center gap-1.5 rounded-full bg-[#0b1624] px-3 py-1.5 text-[#eef7fc]">
-        <span aria-hidden="true" className="size-1.5 rounded-full bg-[#7cc4e8] shadow-[0_0_8px_#7cc4e8]" />
-        <span className="font-semibold">Modo samurái</span>
-        <span className="text-[0.6rem] font-semibold tracking-[0.14em] text-[#7cc4e8] uppercase">activado</span>
-      </li>
-    </ul>
   );
 }

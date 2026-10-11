@@ -5,7 +5,7 @@ import { WinterArcAnalytics } from '../components/WinterArcAnalytics';
 import { WinterArcGrid } from '../components/WinterArcGrid';
 import { WinterArcSchedule } from '../components/WinterArcSchedule';
 import { WinterArcLayout } from '../components/WinterArcLayout';
-import { WinterArcBodyStatus, WinterArcManifesto } from '../components/WinterArcManifesto';
+import { WinterArcManifesto } from '../components/WinterArcManifesto';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -19,6 +19,9 @@ import { WINTER_ARC_MAX_CONSECUTIVE_FAILURES, WINTER_ARC_MIN_RULES } from '../ty
  *
  * Abre el reto mas reciente del usuario (GET /api/winter-arc/current). Si
  * llega ?id=<winterArcId> muestra ese reto, para no romper enlaces viejos.
+ *
+ * El manifiesto va siempre, haya reto o no: es la identidad del camino y se
+ * pinta sin esperar a ninguna peticion.
  */
 export function WinterArc() {
   const winterArcId = new URLSearchParams(window.location.search).get('id');
@@ -29,6 +32,8 @@ export function WinterArc() {
         <h1 id="winter-arc-title" className="text-3xl font-bold tracking-[-0.04em]">
           Tu Winter Arc
         </h1>
+
+        <WinterArcManifesto />
 
         {winterArcId ? <ActiveArc winterArcId={winterArcId} /> : <CurrentArc />}
       </div>
@@ -89,8 +94,6 @@ function ActiveArc({ winterArcId, commitment }: { winterArcId: string; commitmen
 
   return (
     <div className="grid gap-6">
-      <WinterArcBodyStatus />
-
       <Commitment text={commitment} />
 
       <WinterArcSchedule grid={grid} />
@@ -134,8 +137,6 @@ function Commitment({ text }: { text?: string }) {
 function NoArc() {
   return (
     <div className="grid gap-6">
-      <WinterArcManifesto />
-
       <Card>
         <CardHeader>
           <CardTitle className="text-xl font-bold tracking-[-0.03em]">El código del Winter Arc</CardTitle>
