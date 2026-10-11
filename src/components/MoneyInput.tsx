@@ -10,6 +10,9 @@ interface MoneyInputProps {
   autoFocus?: boolean;
   /** "lg" es la cifra protagonista de un formulario; "default" va en linea. */
   size?: 'default' | 'lg';
+  /** Clases extra del campo, p. ej. una altura tactil mayor. */
+  className?: string;
+  'aria-describedby'?: string;
 }
 
 /**
@@ -25,6 +28,8 @@ export function MoneyInput({
   required,
   autoFocus,
   size = 'default',
+  className,
+  'aria-describedby': describedBy,
 }: MoneyInputProps) {
   const large = size === 'lg';
 
@@ -52,9 +57,11 @@ export function MoneyInput({
         placeholder={placeholder}
         required={required}
         autoFocus={autoFocus}
+        aria-describedby={describedBy}
         className={cn(
           'w-full min-w-0 rounded-lg border border-input bg-card font-semibold tabular-nums text-foreground shadow-xs transition-colors outline-none placeholder:font-normal placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
           large ? 'h-16 rounded-xl pr-16 pl-10 text-3xl tracking-[-0.03em]' : 'h-10 pr-12 pl-7 text-base md:text-sm',
+          className,
         )}
       />
       <span
