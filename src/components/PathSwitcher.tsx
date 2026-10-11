@@ -35,6 +35,7 @@ export function PathMark({ path, size = 'sm' }: { path: PathId; size?: 'sm' | 'l
           侍
         </span>
       )}
+      {path === 'sleep' && <span className={large ? 'text-2xl' : 'text-base'}>💤</span>}
     </span>
   );
 }
@@ -43,6 +44,7 @@ const MARK_CLASS: Record<PathId, string> = {
   finanzas: 'bg-hero-accent text-hero shadow-hero/30',
   habitos: 'bg-[#c8362d] text-[#f4efe4] shadow-[#c8362d]/30',
   'winter-arc': 'bg-[#cfe8f5] text-[#0b1624] shadow-[#7cc4e8]/30',
+  sleep: 'bg-[#e0e7ff] text-[#312e81] shadow-[#6366f1]/25',
 };
 
 interface PathSwitcherProps {
@@ -53,7 +55,7 @@ interface PathSwitcherProps {
 }
 
 /**
- * Boton "Caminos" de los tres headers: abre un menu con los tres caminos, marca
+ * Boton "Caminos" de los headers: abre un menu con todos los caminos, marca
  * en cual estas y deja volver al selector completo. Es el mismo en todos lados
  * para que cambiar de camino se aprenda una sola vez.
  */
@@ -134,6 +136,7 @@ const PATHS: { id: PathId; label: string; hint: string }[] = [
   { id: 'finanzas', label: 'Finanzas', hint: 'Cuánto puedes gastar hoy' },
   { id: 'habitos', label: 'Hábitos', hint: 'Un día más, una repetición más' },
   { id: 'winter-arc', label: 'Winter Arc', hint: 'Forja al samurái en 90 días' },
+  { id: 'sleep', label: 'Sueño', hint: 'Despertar, acostarse y cuánto dormiste' },
 ];
 
 const TRIGGER_CLASS: Record<NonNullable<PathSwitcherProps['tone']>, string> = {

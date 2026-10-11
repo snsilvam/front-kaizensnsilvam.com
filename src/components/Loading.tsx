@@ -78,6 +78,14 @@ export function PathSplash({ path, action = 'Cargando', className }: PathSplashP
             侍
           </span>
         )}
+        {path === 'sleep' && (
+          <span
+            aria-hidden="true"
+            className="grid size-18 animate-pulse place-items-center rounded-full bg-[#e0e7ff] text-4xl shadow-lg shadow-[#6366f1]/25"
+          >
+            💤
+          </span>
+        )}
         <p className={cn('text-sm font-medium tracking-wide', SPLASH_TEXT_CLASS[path])}>{SPLASH_NAME[path]}</p>
       </div>
     </div>
@@ -88,16 +96,19 @@ const SPLASH_NAME: Record<PathId, string> = {
   finanzas: 'Kaizen',
   habitos: 'Kaizen Habits',
   'winter-arc': 'Winter Arc',
+  sleep: 'Sueño',
 };
 
 const SPLASH_CLASS: Record<PathId, string> = {
   finanzas: 'bg-background',
   habitos: 'sumi-band sumi-seigaiha',
   'winter-arc': 'bg-[#0b1624] bg-[radial-gradient(120%_90%_at_50%_0%,rgba(124,196,232,0.28)_0%,rgba(124,196,232,0)_60%)]',
+  sleep: 'bg-background',
 };
 
 const SPLASH_TEXT_CLASS: Record<PathId, string> = {
   finanzas: 'text-muted-foreground',
   habitos: 'tracking-[0.22em] text-[#f4efe4]/70 uppercase',
   'winter-arc': 'tracking-[0.22em] text-[#eef7fc]/70 uppercase',
+  sleep: 'text-muted-foreground',
 };
