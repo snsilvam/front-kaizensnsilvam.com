@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { listMarketBudgets } from '../services/market';
+import { createMarketList, listMarketBudgets } from '../services/market';
 import {
   listOpenPendingPayments,
   markPendingPaymentAsMarketBudget,
   type PendingPayment,
 } from '../services/pendingPayments';
-import type { MarketBudget } from '../types/market';
+import type { MarketBudget, MarketListInput } from '../types/market';
 
 interface UseMarketBudgets {
   budgets: MarketBudget[] | null;
@@ -23,10 +23,14 @@ interface UseMarketBudgets {
    * listo, para que la pantalla pueda entrar de una vez a la compra.
    */
   chooseExpense: (paymentId: string) => Promise<boolean>;
+  creating: boolean;
+  /** Crea una lista nueva. Responde su id para entrar a ella, o null si fallo. */
+  createList: (input: MarketListInput) => Promise<string | null>;
 }
 
 /**
- * La primera pantalla del modulo: contra cual gasto voy a comprar.
+ * La primera pantalla del modulo: las listas de mercado y contra cual gasto
+ * voy a comprar.
  *
  * Se piden dos listas porque son dos cosas distintas: los presupuestos ya
  * listos (/market) y el resto de gastos abiertos, que se pueden usar como
@@ -39,6 +43,7 @@ export function useMarketBudgets(): UseMarketBudgets {
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [choosingId, setChoosingId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
@@ -88,6 +93,21 @@ export function useMarketBudgets(): UseMarketBudgets {
     }
   }, []);
 
+  const createList = useCallback(async (input: MarketListInput) => {
+    setCreating(true);
+    setActionError(null);
+
+    try {
+      const created = await createMarketList(input);
+      return created.pendingPaymentId;
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : 'No pudimos crear la lista.');
+      return null;
+    } finally {
+      setCreating(false);
+    }
+  }, []);
+
   return {
     budgets,
     otherExpenses,
@@ -97,5 +117,7 @@ export function useMarketBudgets(): UseMarketBudgets {
     choosingId,
     reload,
     chooseExpense,
+    creating,
+    createList,
   };
 }
