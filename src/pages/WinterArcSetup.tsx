@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { Plus, Swords } from 'lucide-react';
+import { Plus, Sparkles, Swords } from 'lucide-react';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { WinterArcCommitmentDialog } from '../components/WinterArcCommitmentDialog';
+import { WinterArcHabitSuggestions } from '../components/WinterArcHabitSuggestions';
 import { WinterArcLayout } from '../components/WinterArcLayout';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -15,6 +16,7 @@ import { WINTER_ARC_MIN_RULES } from '../types/winterArc';
 export function WinterArcSetup() {
   const habits = useKaizenHabits();
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const [suggesting, setSuggesting] = useState(false);
   const [askingCommitment, setAskingCommitment] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -30,6 +32,12 @@ export function WinterArcSetup() {
       else next.add(habitId);
       return next;
     });
+  }
+
+  // Los hábitos sugeridos que se acaban de crear ya llegan marcados al código.
+  function suggestionsCreated(habitIds: string[]) {
+    setSelected((current) => new Set([...current, ...habitIds]));
+    habits.reload();
   }
 
   // Elegidos los hábitos, falta el propósito del reto: se pide en un modal.
@@ -83,7 +91,8 @@ export function WinterArcSetup() {
           </CardHeader>
 
           <CardContent>
-            {habits.loading && (
+            {/* Sólo en la primera carga: al recargar tras crear sugeridos se queda lo que había. */}
+            {habits.loading && !habits.data && (
               <div className="grid gap-3" aria-busy="true" aria-label="Cargando hábitos">
                 {[0, 1, 2].map((item) => (
                   <Skeleton key={item} className="h-11 rounded-lg" />
@@ -95,19 +104,31 @@ export function WinterArcSetup() {
               <ErrorMessage title="No pudimos cargar tus hábitos" message={habits.error} onRetry={habits.reload} />
             )}
 
-            {!habits.loading && !habits.error && activeHabits.length < WINTER_ARC_MIN_RULES && (
+            {habits.data && !habits.error && activeHabits.length < WINTER_ARC_MIN_RULES && (
               <div className="grid gap-3 text-sm text-muted-foreground">
                 <p>
                   El código de un samurái necesita al menos {WINTER_ARC_MIN_RULES} hábitos activos. Tienes{' '}
                   {activeHabits.length}.
                 </p>
+                {!suggesting && (
+                  <Button type="button" onClick={() => setSuggesting(true)}>
+                    <Sparkles aria-hidden="true" />
+                    Sugerir hábitos
+                  </Button>
+                )}
+                {suggesting && (
+                  <WinterArcHabitSuggestions
+                    existingNames={habits.data.map((habit) => habit.name)}
+                    onCreated={suggestionsCreated}
+                  />
+                )}
                 <Button type="button" variant="outline" onClick={goToNewHabit}>
-                  Forjar hábitos
+                  Forjar mis propios hábitos
                 </Button>
               </div>
             )}
 
-            {!habits.loading && !habits.error && activeHabits.length >= WINTER_ARC_MIN_RULES && (
+            {habits.data && !habits.error && activeHabits.length >= WINTER_ARC_MIN_RULES && (
               <form className="grid gap-5" onSubmit={submit}>
                 <fieldset className="grid gap-2" disabled={submitting}>
                   <legend className="sr-only">Hábitos</legend>
