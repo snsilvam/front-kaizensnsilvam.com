@@ -1,6 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { Check, Clock, Plus, Swords } from 'lucide-react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { Check, Clock, Flame, Plus, Swords } from 'lucide-react';
 import { HabitRepetitionDialog } from './HabitRepetitionDialog';
+import { WinterArcDayForged } from './WinterArcDayForged';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
@@ -8,9 +9,29 @@ import { useKaizenHabits } from '../hooks/useKaizenHabits';
 import type { UseWinterArcGrid } from '../hooks/useWinterArcGrid';
 import { bogotaMinutesNow, clockMinutes, formatClock, formatDuration } from '../lib/dayClock';
 import { cn } from '../lib/utils';
+import { strike } from '../lib/winterArcCelebration';
+import {
+  FIRE_BOX_CLASS,
+  FIRE_FLAME_CLASS,
+  FIRE_SEGMENT_CLASS,
+  FIRE_TEXT_CLASS,
+  LIT_FIRE_TIERS,
+  type FireTier,
+  type LitFireTier,
+} from '../lib/winterArcFire';
 import { ApiError } from '../services/api';
 import { registerKaizenHabitRepetition } from '../services/kaizenHabits';
 import type { WinterArcScheduleItem } from '../types/winterArc';
+
+/** Lo que dura la frase del golpe de acero; coincide con .winter-cheer. */
+const CHEER_MS = 2_400;
+
+/** Una regla recién cumplida: su frase y cuándo, para reiniciar la animación. */
+interface Struck {
+  habitId: string;
+  cheer: string;
+  at: number;
+}
 
 /** Cada cuánto se mueve el marcador de "ahora". */
 const TICK_MS = 30_000;
@@ -32,7 +53,9 @@ interface Slot {
  * Sólo se muestra con el reto activo: es una agenda, no un registro.
  *
  * Cada regla pendiente se registra aquí mismo con el modal del dojo, siempre
- * para el `today` del servidor; al guardar se recarga el grid.
+ * para el `today` del servidor; al guardar se recarga el grid. Cumplirla es un
+ * golpe de acero (confeti desde su punto y una frase) y cumplir la última del
+ * día abre la celebración de WinterArcDayForged.
  */
 export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
   const now = useBogotaMinutes();
@@ -41,6 +64,16 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
   const [registering, setRegistering] = useState<WinterArcScheduleItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [struck, setStruck] = useState<Struck | null>(null);
+  const [dayForged, setDayForged] = useState(false);
+  const closeDayForged = useCallback(() => setDayForged(false), []);
+
+  // La frase del golpe dura lo que su animación.
+  useEffect(() => {
+    if (!struck) return;
+    const id = window.setTimeout(() => setStruck(null), CHEER_MS);
+    return () => window.clearTimeout(id);
+  }, [struck]);
 
   if (!grid.data) {
     return grid.error ? null : <Skeleton className="h-64 w-full rounded-xl" aria-label="Cargando la orden de hoy" />;
@@ -73,6 +106,10 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
         description: input.description,
       });
       setRegistering(null);
+      const cheer = strike(document.querySelector(`[data-strike-origin="${CSS.escape(item.habit_id)}"]`));
+      setStruck({ habitId: item.habit_id, cheer, at: Date.now() });
+      // Era la única que faltaba: el día queda forjado.
+      if (!item.done_today && done === schedule.length - 1) setDayForged(true);
       grid.reload();
     } catch (requestError) {
       // 409: ya tenía repetición hoy (una por día); basta con refrescar el horario.
@@ -114,6 +151,7 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
                 marker={index === markerAt ? <NowMarker now={now} position={index === 0 ? 'first' : 'middle'} /> : null}
                 connector={index < slots.length - 1 || markerAt === slots.length}
                 onRegister={openRegister}
+                struck={struck?.habitId === slot.item.habit_id ? struck : null}
               />
             ))}
             {markerAt === slots.length && <NowMarker now={now} position="last" />}
@@ -125,14 +163,21 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
             <p className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase">Sin hora</p>
             <ul className="grid gap-1.5">
               {unscheduled.map((item) => (
-                <li key={item.habit_id} className="flex items-center gap-2 text-sm">
-                  <StateDot state={item.done_today ? 'done' : 'upcoming'} small />
+                <li key={item.habit_id} className="relative flex items-center gap-2 text-sm">
+                  <StateDot
+                    key={String(item.done_today)}
+                    state={item.done_today ? 'done' : 'upcoming'}
+                    small
+                    originId={item.habit_id}
+                    pop={struck?.habitId === item.habit_id}
+                  />
                   <span className={cn('font-medium', item.done_today && 'text-muted-foreground')}>{item.name}</span>
                   {item.done_today ? (
                     <span className="text-xs text-[#1d6a8f]">cumplido</span>
                   ) : (
                     <RegisterButton item={item} onRegister={openRegister} className="ml-auto" />
                   )}
+                  {struck?.habitId === item.habit_id && <Cheer struck={struck} className="-top-6 left-6" />}
                 </li>
               ))}
             </ul>
@@ -160,6 +205,15 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
           error={saveError}
           onClose={() => setRegistering(null)}
           onConfirm={(input) => saveRepetition(registering, input)}
+        />
+      )}
+
+      {dayForged && (
+        <WinterArcDayForged
+          winterArcId={grid.data.id}
+          dayNumber={grid.data.days.find((day) => day.date === today)?.day_number}
+          onSealed={grid.reload}
+          onClose={closeDayForged}
         />
       )}
     </Card>
@@ -192,12 +246,15 @@ function SlotRow({
   marker,
   connector,
   onRegister,
+  struck,
 }: {
   slot: Slot;
   now: number;
   marker: ReactNode;
   connector: boolean;
   onRegister: (item: WinterArcScheduleItem) => void;
+  /** El golpe de esta regla, si se acaba de cumplir. */
+  struck: Struck | null;
 }) {
   const { time, period } = formatClock(slot.minutes);
 
@@ -214,15 +271,17 @@ function SlotRow({
 
         <div className="relative flex justify-center">
           {connector && <span aria-hidden="true" className="absolute top-7 bottom-0 w-px bg-border" />}
-          <StateDot state={slot.state} />
+          {/* key: al pasar a cumplido se vuelve a montar y el salto arranca con el color nuevo. */}
+          <StateDot key={slot.state} state={slot.state} originId={slot.item.habit_id} pop={struck !== null} />
         </div>
 
-        <div className="min-w-0 pb-6">
+        <div className="relative min-w-0 pb-6">
           <p className={cn('font-medium break-words', slot.state === 'done' && 'text-muted-foreground line-through decoration-[#2b7fa8]/60')}>
             {slot.item.name}
           </p>
           <p className={cn('mt-0.5 text-xs', STATE_TEXT_CLASS[slot.state])}>{stateLabel(slot, now)}</p>
           {slot.state !== 'done' && <RegisterButton item={slot.item} onRegister={onRegister} className="mt-2" />}
+          {struck && <Cheer struck={struck} className="bottom-0 left-0" />}
         </div>
       </li>
     </>
@@ -284,12 +343,26 @@ function RegisterButton({
   );
 }
 
-function StateDot({ state, small = false }: { state: SlotState; small?: boolean }) {
+function StateDot({
+  state,
+  small = false,
+  originId,
+  pop = false,
+}: {
+  state: SlotState;
+  small?: boolean;
+  /** habit_id de la regla: de aquí sale el confeti al cumplirla. */
+  originId?: string;
+  /** Salta: la regla se acaba de cumplir. */
+  pop?: boolean;
+}) {
   return (
     <span
       aria-hidden="true"
+      data-strike-origin={originId}
       className={cn(
         'relative grid shrink-0 place-items-center rounded-full border-2',
+        pop && 'winter-strike-pop',
         small ? 'size-4' : 'size-7',
         state === 'done' && 'border-[#2b7fa8] bg-[#2b7fa8] text-[#eef7fc]',
         state === 'next' && 'border-[#0b1624] bg-[#0b1624] text-[#cfe8f5] shadow-md shadow-[#7cc4e8]/50',
@@ -303,23 +376,77 @@ function StateDot({ state, small = false }: { state: SlotState; small?: boolean 
   );
 }
 
-function DayProgress({ done, total }: { done: number; total: number }) {
+/**
+ * La frase del golpe de acero: sube desde la regla cumplida y se desvanece.
+ * `at` en la key la reinicia si se cumplen dos seguidas.
+ */
+function Cheer({ struck, className }: { struck: Struck; className?: string }) {
   return (
-    <div className="grid gap-2">
-      <p className="text-sm">
-        <span className="font-semibold">
-          {done} de {total}
-        </span>{' '}
-        <span className="text-muted-foreground">{total === 1 ? 'regla cumplida hoy' : 'reglas cumplidas hoy'}</span>
-      </p>
-      <div className="flex gap-1" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={done} aria-label="Reglas cumplidas hoy">
+    <span
+      key={struck.at}
+      role="status"
+      className={cn(
+        'winter-cheer pointer-events-none absolute z-10 rounded-full bg-[#0b1624] px-2.5 py-1 text-xs font-medium whitespace-nowrap text-[#eef7fc] shadow-md',
+        className,
+      )}
+    >
+      ⚔ {struck.cheer}
+    </span>
+  );
+}
+
+/**
+ * La racha del día: la llama sube de color con cada regla cumplida, de verde a
+ * fuego amarillo y a fuego morado. Las reglas se reparten en esos tres tramos y
+ * la última siempre cae en el morado: el día completo arde en morado.
+ */
+/** Tramo de la regla `index` (0..total-1). */
+function tierOf(index: number, total: number): LitFireTier {
+  return LIT_FIRE_TIERS[Math.ceil(((index + 1) * LIT_FIRE_TIERS.length) / total) - 1];
+}
+
+function DayProgress({ done, total }: { done: number; total: number }) {
+  const tier: FireTier = done === 0 ? 'off' : tierOf(done - 1, total);
+  const label = tier === 'purple' && done === total ? 'Fuego morado · día completo' : FIRE_LABEL[tier];
+
+  return (
+    <div className={cn('grid gap-3 rounded-2xl border p-4 transition-colors duration-500', FIRE_BOX_CLASS[tier])}>
+      <div className="flex items-center gap-4">
+        <Flame
+          aria-hidden="true"
+          className={cn('size-14 shrink-0 transition-[color,fill] duration-500', FIRE_FLAME_CLASS[tier])}
+        />
+        <div className="min-w-0">
+          <p className={cn('text-[0.62rem] font-semibold tracking-[0.22em] uppercase', FIRE_TEXT_CLASS[tier])}>
+            Racha de hoy · {label}
+          </p>
+          <p className="leading-tight">
+            <span className={cn('font-mono text-4xl font-black tabular-nums', FIRE_TEXT_CLASS[tier])}>
+              {done}
+              <span className="text-2xl text-muted-foreground">/{total}</span>
+            </span>
+          </p>
+          <p className="text-sm text-muted-foreground">{total === 1 ? 'regla cumplida hoy' : 'reglas cumplidas hoy'}</p>
+        </div>
+      </div>
+      <div className="flex gap-1.5" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={done} aria-label="Reglas cumplidas hoy">
         {Array.from({ length: total }, (_, i) => (
-          <span key={i} className={cn('h-1.5 flex-1 rounded-full', i < done ? 'bg-[#2b7fa8]' : 'bg-muted')} />
+          <span
+            key={i}
+            className={cn('h-3 flex-1 rounded-full transition-colors duration-500', i < done ? FIRE_SEGMENT_CLASS[tierOf(i, total)] : 'bg-muted')}
+          />
         ))}
       </div>
     </div>
   );
 }
+
+const FIRE_LABEL: Record<FireTier, string> = {
+  off: 'sin encender',
+  green: 'encendida',
+  fire: 'en llamas',
+  purple: 'fuego morado',
+};
 
 const STATE_TEXT_CLASS: Record<SlotState, string> = {
   done: 'text-[#1d6a8f]',

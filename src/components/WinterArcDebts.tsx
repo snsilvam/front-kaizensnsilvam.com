@@ -8,6 +8,7 @@ import { useKaizenHabits } from '../hooks/useKaizenHabits';
 import type { UseWinterArcGrid } from '../hooks/useWinterArcGrid';
 import { formatDayMonth } from '../lib/habitDates';
 import { cn } from '../lib/utils';
+import { strike } from '../lib/winterArcCelebration';
 import { ApiError } from '../services/api';
 import { registerKaizenHabitRepetition } from '../services/kaizenHabits';
 import { WINTER_ARC_DEBT_PAYMENT_DAYS, type WinterArcDebt, type WinterArcDebtHabit } from '../types/winterArc';
@@ -96,6 +97,7 @@ function DebtList({
         description: input.description,
       });
       setPaying(null);
+      strike(document.querySelector(`[data-strike-origin="${CSS.escape(`${debt.date}:${habit.habit_id}`)}"]`));
       if (debt.habits.every((h) => h.paid || h.habit_id === habit.habit_id)) {
         onSettled(`Deuda del ${dayLabel(debt.date)} saldada: ese día ya no cuenta para la racha.`);
       }
@@ -138,6 +140,7 @@ function DebtList({
                   <li key={habit.habit_id} className="flex items-center gap-2 text-sm">
                     <span
                       aria-hidden="true"
+                      data-strike-origin={`${debt.date}:${habit.habit_id}`}
                       className={cn(
                         'grid size-4 shrink-0 place-items-center rounded-full border-2',
                         habit.paid ? 'border-[#2b7fa8] bg-[#2b7fa8] text-[#eef7fc]' : 'border-warning bg-warning-soft',
