@@ -215,6 +215,28 @@
   }
 }
 
+/* --- Sueno, la piel del modal 💤 -------------------------------------------
+   El sueno no es un camino: es un modal que se abre desde los headers de
+   Habitos y Winter Arc. Lleva la noche indigo del 💤 en los dos, asi que
+   redefine la paleta en su propio contenedor (SleepDialog), igual que el
+   Winter Arc. Sin fondo: el contenedor es el velo del modal. */
+@layer base {
+  .sleep-theme {
+    --foreground: #1e1b4b;
+    --card: #ffffff;
+    --card-foreground: #1e1b4b;
+    --primary: #312e81;
+    --primary-foreground: #eef2ff;
+    --accent: #e0e7ff;
+    --accent-foreground: #312e81;
+    --muted: #eef2ff;
+    --muted-foreground: #565a80;
+    --border: #e0e7ff;
+    --input: #c7d2fe;
+    --ring: #6366f1;
+  }
+}
+
 /* --- Winter Arc, la llama de supervivencia --------------------------------
    Sana arde con un vaivén suave; con 2 fallos seguidos parpadea como si se
    fuera a apagar. El color y el tamaño los pone Tailwind en SurvivalFlame. */

@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { PathSwitcher } from './PathSwitcher';
 import { UserAvatar } from './UserAvatar';
 import { PastorBark } from './PastorBark';
+import { SleepButton } from './SleepButton';
 import { useAuth } from '../auth/useAuth';
 
 /**
@@ -55,6 +56,8 @@ export function HabitsHeader() {
             <br />
             tu identidad
           </p>
+
+          <SleepButton />
 
           <PathSwitcher current="habitos" tone="sumi" />
 

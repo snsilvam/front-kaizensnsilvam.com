@@ -5,19 +5,19 @@ import type { SaveSleepInput, SleepToday } from '../types/sleep';
 interface UseSleepToday {
   data: SleepToday | null;
   loading: boolean;
-  /** Error de carga: la pantalla no se puede pintar. */
+  /** Error de carga: el formulario no se puede pintar. */
   error: string | null;
   reload: () => void;
   saving: boolean;
-  /** Error al guardar; lo que ya estaba sigue en pantalla. */
+  /** Error al guardar; lo que ya estaba sigue en el formulario. */
   saveError: string | null;
   /** `true` si quedo guardado. */
   save: (input: SaveSleepInput) => Promise<boolean>;
 }
 
 /**
- * Estado del modulo de sueno: el registro de hoy. Guardar no recarga: el
- * backend responde la pantalla completa y la dejamos tal cual.
+ * Estado del modal de sueno: el registro de hoy. Guardar no recarga: el
+ * backend responde el dia completo y lo dejamos tal cual.
  */
 export function useSleepToday(): UseSleepToday {
   const [data, setData] = useState<SleepToday | null>(null);

@@ -1,101 +1,115 @@
-import { useState, type FormEvent } from 'react';
-import { Check } from 'lucide-react';
-import { ErrorMessage } from '../components/ErrorMessage';
-import { SleepLayout } from '../components/SleepLayout';
-import { Alert, AlertDescription } from '../components/ui/alert';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Skeleton } from '../components/ui/skeleton';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Check, X } from 'lucide-react';
+import { ErrorMessage } from './ErrorMessage';
+import { SleepHistory } from './SleepHistory';
+import { Alert, AlertDescription } from './ui/alert';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Skeleton } from './ui/skeleton';
 import { useSleepToday } from '../hooks/useSleepToday';
-import {
-  formatRecordDate,
-  formatSleepMinutes,
-  formatTimeOfDay,
-  isTimeOfDay,
-  splitSleepMinutes,
-  toSleepMinutes,
-} from '../lib/sleep';
-import type { SaveSleepInput, SleepRecord, SleepToday } from '../types/sleep';
+import { formatRecordDate, isTimeOfDay, splitSleepMinutes, toSleepMinutes } from '../lib/sleep';
+import type { SaveSleepInput, SleepToday } from '../types/sleep';
 
 /**
- * Modulo de sueno: /sleep. Un solo registro, el de hoy, con tres datos que
- * declara el usuario: a que hora se desperto, a que hora se acostara y cuanto
- * durmio la noche anterior. Ninguno se calcula de los otros.
+ * Registro de sueno de hoy, en un modal que abre el boton 💤 de los headers de
+ * Habitos y Winter Arc (SleepButton). Tres datos que declara el usuario: a que
+ * hora se desperto, a que hora se acostara y cuanto durmio la noche anterior.
+ * Ninguno se calcula de los otros. Arriba va el historial de higiene del sueno
+ * (SleepHistory), que ya llega evaluado del backend.
+ *
+ * Se monta al abrirse, asi que cada apertura pide el dia al backend. Lleva la
+ * noche del 💤 (`.sleep-theme`) en cualquier camino. Como MarketSheet, es una
+ * hoja desde abajo en movil y un dialogo centrado en escritorio: se cierra con
+ * Escape, con la X o tocando fuera, salvo mientras guarda.
  */
-export function Sleep() {
+export function SleepDialog({ onClose }: { onClose: () => void }) {
   const { data, loading, error, reload, saving, saveError, save } = useSleepToday();
 
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !saving) onClose();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [saving, onClose]);
+
   return (
-    <SleepLayout>
-      <section aria-labelledby="sleep-title" className="grid gap-6">
-        <header>
-          <p className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
-            {data ? formatRecordDate(data.date) : 'Hoy'}
-          </p>
-          <h1 id="sleep-title" className="mt-2 text-3xl font-bold tracking-[-0.04em] text-foreground">
-            Tu registro de sueño
-          </h1>
-          {data && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Hábito: <span className="font-medium text-foreground">{data.habit.name}</span>
+    <div
+      className="sleep-theme fixed inset-0 z-50 flex animate-in items-end justify-center bg-[#1e1b4b]/45 backdrop-blur-[2px] fade-in duration-150 sm:items-center sm:p-4"
+      onClick={(event) => {
+        if (event.target === event.currentTarget && !saving) onClose();
+      }}
+    >
+      <div
+        className="max-h-[92dvh] w-full max-w-md animate-in overflow-y-auto overscroll-contain rounded-t-3xl border border-border bg-card px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-card-foreground shadow-2xl duration-200 slide-in-from-bottom-6 sm:rounded-2xl sm:p-6 sm:zoom-in-95 sm:slide-in-from-bottom-0"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sleep-dialog-title"
+        aria-describedby="sleep-dialog-description"
+      >
+        <div aria-hidden="true" className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-border sm:hidden" />
+
+        <div className="flex items-start gap-3.5">
+          <span
+            aria-hidden="true"
+            className="grid size-11 shrink-0 place-items-center rounded-full bg-[#e0e7ff] text-2xl shadow-md shadow-[#6366f1]/25"
+          >
+            💤
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[0.68rem] font-semibold tracking-[0.12em] text-primary uppercase">
+              {data ? formatRecordDate(data.date) : 'Hoy'}
             </p>
-          )}
-        </header>
-
-        {loading && (
-          <div className="grid gap-4" aria-busy="true" aria-label="Cargando tu registro de sueño">
-            <Skeleton className="h-24 rounded-2xl" />
-            <Skeleton className="h-80 rounded-2xl" />
+            <h2 id="sleep-dialog-title" className="mt-1 text-lg font-semibold text-foreground">
+              Tu registro de sueño
+            </h2>
+            <p id="sleep-dialog-description" className="mt-0.5 text-sm text-muted-foreground">
+              {data ? (
+                <>
+                  Hábito: <span className="font-medium text-foreground">{data.habit.name}</span>
+                </>
+              ) : (
+                'Cómo dormiste y a qué hora te acuestas.'
+              )}
+            </p>
           </div>
-        )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-lg"
+            className="-mt-1 -mr-2 text-muted-foreground"
+            aria-label="Cerrar"
+            disabled={saving}
+            onClick={onClose}
+          >
+            <X aria-hidden="true" />
+          </Button>
+        </div>
 
-        {!loading && error && (
-          <ErrorMessage title="No pudimos cargar tu sueño" message={error} onRetry={reload} />
-        )}
+        <div className="mt-5">
+          {loading && (
+            <div className="grid gap-4" aria-busy="true" aria-label="Cargando tu registro de sueño">
+              <Skeleton className="h-20 rounded-xl" />
+              <Skeleton className="h-12 rounded-xl" />
+              <Skeleton className="h-12 rounded-xl" />
+            </div>
+          )}
 
-        {!loading && !error && data && (
-          <>
-            <SleepSummary record={data.record} />
-            {/* Un día nuevo vacía el formulario. */}
-            <SleepForm key={data.date} today={data} saving={saving} saveError={saveError} onSave={save} />
-          </>
-        )}
-      </section>
-    </SleepLayout>
-  );
-}
+          {!loading && error && (
+            <ErrorMessage title="No pudimos cargar tu sueño" message={error} onRetry={reload} />
+          )}
 
-/** Lo guardado hoy, de un vistazo; o que todavia no hay nada. */
-function SleepSummary({ record }: { record: SleepRecord | null }) {
-  if (!record) {
-    return (
-      <div className="flex items-center gap-4 rounded-2xl border border-dashed bg-card/60 px-5 py-5">
-        <span aria-hidden="true" className="text-3xl">
-          💤
-        </span>
-        <div>
-          <p className="font-semibold text-foreground">Aún no registras hoy</p>
-          <p className="text-sm text-muted-foreground">Anota cómo dormiste y a qué hora te acostarás.</p>
+          {!loading && !error && data && (
+            <div className="grid gap-5">
+              {/* Guardar responde el historial ya con hoy: la tira se actualiza sola. */}
+              <SleepHistory history={data.history} today={data.date} />
+              {/* Un dia nuevo vacia el formulario. */}
+              <SleepForm key={data.date} today={data} saving={saving} saveError={saveError} onSave={save} />
+            </div>
+          )}
         </div>
       </div>
-    );
-  }
-
-  return (
-    <dl className="grid grid-cols-3 gap-2 rounded-2xl bg-card p-4 shadow-soft ring-1 ring-border sm:gap-4 sm:p-5">
-      <SummaryItem label="Dormiste" value={formatSleepMinutes(record.sleepMinutes)} />
-      <SummaryItem label="Despertaste" value={formatTimeOfDay(record.wakeTime)} />
-      <SummaryItem label="Te acostarás" value={formatTimeOfDay(record.bedTime)} />
-    </dl>
-  );
-}
-
-function SummaryItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-1 text-lg font-bold tracking-tight text-foreground tabular-nums sm:text-xl">{value}</dd>
     </div>
   );
 }
@@ -152,7 +166,7 @@ function SleepForm({ today, saving, saveError, onSave }: SleepFormProps) {
   const digits = (value: string) => value.replace(/\D/g, '').slice(0, 2);
 
   return (
-    <form className="grid gap-5 rounded-2xl bg-card p-5 shadow-soft ring-1 ring-border sm:p-6" onSubmit={submit} noValidate>
+    <form className="grid gap-5" onSubmit={submit} noValidate>
       <div className="grid gap-2">
         <Label htmlFor="sleep-duration-hours">¿Cuánto dormiste anoche?</Label>
         <div className="grid grid-cols-2 gap-3">
