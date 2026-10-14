@@ -11,7 +11,7 @@ import { ApiError } from '../services/api';
 import { syncWinterArcToday } from '../services/winterArc';
 import type { WinterArcDay } from '../types/winterArc';
 
-type DayState = 'future' | 'today' | 'success' | 'failed';
+type DayState = 'future' | 'today' | 'success' | 'paid' | 'failed';
 
 interface WinterArcGridProps {
   winterArcId: string;
@@ -135,6 +135,7 @@ export function WinterArcGrid({ winterArcId, grid }: WinterArcGridProps) {
           <ul className="flex flex-wrap gap-4 text-xs text-muted-foreground">
             <Legend className={STATE_CLASS.future} label="por forjar" />
             <Legend className={STATE_CLASS.success} label="forjado" />
+            <Legend className={STATE_CLASS.paid} label="deuda pagada" />
             <Legend className={STATE_CLASS.failed} label="cedido al placer" />
           </ul>
         </div>
@@ -165,6 +166,8 @@ const STATE_CLASS: Record<DayState, string> = {
   today: 'bg-muted',
   // Acero templado: el azul de la escarcha, no el verde de finanzas.
   success: 'bg-[#2b7fa8]',
+  // Escarcha clara: el día se salvó pagando la deuda, pero no se forjó.
+  paid: 'bg-[#7cc4e8]',
   failed: 'bg-destructive',
 };
 
@@ -172,12 +175,14 @@ const STATE_LABEL: Record<DayState, string> = {
   future: 'por forjar',
   today: 'hoy, por forjar',
   success: 'forjado',
+  paid: 'deuda pagada',
   failed: 'cedido al placer',
 };
 
 /** Las fechas son YYYY-MM-DD, así que se comparan como texto. */
 function dayState(day: WinterArcDay, today: string): DayState {
   if (day.is_successful) return 'success';
+  if (day.debt_paid) return 'paid';
   if (day.date > today) return 'future';
   if (day.date === today) return 'today';
   return 'failed';

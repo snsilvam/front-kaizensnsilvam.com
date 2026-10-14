@@ -41,6 +41,35 @@ export interface WinterArcDay {
   date: string;
   /** false también para los días que nunca se sincronizaron. */
   is_successful: boolean;
+  /**
+   * Día fallado cuya deuda se pagó: cuenta como cumplido para la racha, pero
+   * `is_successful` sigue en false, así que no es un día forjado.
+   */
+  debt_paid: boolean;
+}
+
+/** Días siguientes a un fallo en los que se puede pagar su deuda. La regla vive en el backend. */
+export const WINTER_ARC_DEBT_PAYMENT_DAYS = 3;
+
+/**
+ * Un día fallado cuya deuda todavía se puede pagar: registrar, con la fecha
+ * `date`, una repetición de cada hábito que faltó, a más tardar en `due_date`.
+ */
+export interface WinterArcDebt {
+  day_number: number;
+  /** Día fallado, YYYY-MM-DD: la fecha con la que se registran las repeticiones que lo pagan. */
+  date: string;
+  /** Último día (inclusivo, America/Bogota) para pagarla, YYYY-MM-DD. */
+  due_date: string;
+  /** Las reglas que faltaron ese día, por nombre. */
+  habits: WinterArcDebtHabit[];
+}
+
+export interface WinterArcDebtHabit {
+  habit_id: string;
+  name: string;
+  /** Ya tiene una repetición con la fecha del día fallado. */
+  paid: boolean;
 }
 
 /** Respuesta de GET /api/winter-arc/:id/grid. */
@@ -53,7 +82,10 @@ export interface WinterArcGrid {
   status: WinterArcStatus;
   /** Día actual según el servidor (America/Bogota), YYYY-MM-DD. */
   today: string;
-  /** Días fallados seguidos (0 a 3) según el último cierre del Juez Nocturno. Sincronizar hoy no la cambia. */
+  /**
+   * Días fallados seguidos (0 a 3) según el último cierre del Juez Nocturno; los días con la deuda
+   * pagada no cuentan. Sincronizar hoy no la cambia.
+   */
   consecutive_failed_days: number;
   /** Día del reto en que se perdió (el tercer fallo seguido); null si no se perdió. */
   failed_on_day: number | null;
@@ -61,6 +93,8 @@ export interface WinterArcGrid {
   days: WinterArcDay[];
   /** Las Reglas Inquebrantables en el orden del día, como las ordena el backend. */
   schedule: WinterArcScheduleItem[];
+  /** Deudas que todavía se pueden pagar, de la más antigua a la más reciente. Vacío si el reto no está activo. */
+  debts: WinterArcDebt[];
 }
 
 /** Una Regla Inquebrantable en el horario del día. */
