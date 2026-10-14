@@ -3,6 +3,7 @@ import { LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { PathSwitcher } from './PathSwitcher';
+import { SleepButton } from './SleepButton';
 import { UserAvatar } from './UserAvatar';
 import { useAuth } from '../auth/useAuth';
 
@@ -51,6 +52,8 @@ export function WinterArcLayout({ children }: { children: ReactNode }) {
           </p>
 
           <div className="flex items-center gap-2.5">
+            <SleepButton />
+
             <PathSwitcher current="winter-arc" tone="polar" />
 
             <span className="grid place-items-center rounded-full p-0.5 ring-1 ring-[#7cc4e8]/50">

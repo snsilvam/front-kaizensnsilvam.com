@@ -8,15 +8,6 @@ export function isTimeOfDay(value: string): boolean {
   return TIME_OF_DAY.test(value);
 }
 
-/** 338 -> "5 h 38 min"; 360 -> "6 h"; 45 -> "45 min". */
-export function formatSleepMinutes(total: number): string {
-  const hours = Math.floor(total / 60);
-  const minutes = total % 60;
-  if (hours === 0) return `${minutes} min`;
-  if (minutes === 0) return `${hours} h`;
-  return `${hours} h ${minutes} min`;
-}
-
 /** 338 -> { hours: "5", minutes: "38" }, para rellenar el formulario. */
 export function splitSleepMinutes(total: number): { hours: string; minutes: string } {
   return { hours: String(Math.floor(total / 60)), minutes: String(total % 60) };
@@ -40,6 +31,39 @@ export function toSleepMinutes(hours: string, minutes: string): number | string 
   return total;
 }
 
+/** "2026-10-11" -> "sábado, 11 de octubre". La fecha es local, sin zona. */
+export function formatRecordDate(date: string): string {
+  const local = localDate(date);
+  if (!local) return date;
+  return local.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+/** "2026-10-09" -> "jue 9", para la columna del historial. */
+export function formatShortDay(date: string): string {
+  const local = localDate(date);
+  if (!local) return date;
+  const weekday = local.toLocaleDateString('es-CO', { weekday: 'short' }).replace('.', '');
+  return `${weekday} ${local.getDate()}`;
+}
+
+/** 338 -> "5 h 38 min"; 360 -> "6 h"; 45 -> "45 min". */
+export function formatSleepMinutes(total: number): string {
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+  if (hours === 0) return `${minutes} min`;
+  if (minutes === 0) return `${hours} h`;
+  return `${hours} h ${minutes} min`;
+}
+
+/** 400 -> "6h40"; 420 -> "7h"; 45 -> "45m". Cabe bajo una barra angosta. */
+export function formatSleepShort(total: number): string {
+  const hours = Math.floor(total / 60);
+  const minutes = total % 60;
+  if (hours === 0) return `${minutes}m`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h${String(minutes).padStart(2, '0')}`;
+}
+
 /** "22:30" -> "10:30 p. m.", como se lee la hora en Colombia. */
 export function formatTimeOfDay(value: string): string {
   const [hours, minutes] = value.split(':').map(Number);
@@ -51,10 +75,13 @@ export function formatTimeOfDay(value: string): string {
   });
 }
 
-/** "2026-10-11" -> "sábado, 11 de octubre". La fecha es local, sin zona. */
-export function formatRecordDate(date: string): string {
+/** "05:02" -> "5:02": la hora de despertar sin el cero, para columnas angostas. */
+export function formatWakeShort(value: string): string {
+  return value.replace(/^0(\d)/, '$1');
+}
+
+function localDate(date: string): Date | null {
   const [year, month, day] = date.split('-').map(Number);
   const local = new Date(year, month - 1, day);
-  if (Number.isNaN(local.getTime())) return date;
-  return local.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  return Number.isNaN(local.getTime()) ? null : local;
 }

@@ -102,7 +102,7 @@ export function SelectApp() {
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-3 md:gap-5">
           <PathCard
             path="finanzas"
             eyebrow="Finanzas"
@@ -138,17 +138,6 @@ export function SelectApp() {
           >
             <Snowfall count={10} />
           </PathCard>
-
-          <PathCard
-            path="sleep"
-            eyebrow="Despertar 5AM"
-            title="Sueño"
-            tagline="Cómo dormiste y a qué hora te acuestas."
-            features={['Despertar, hora de acostarse y lo que dormiste', 'Un registro por día, que puedes corregir']}
-            cta="Registrar mi sueño"
-            disabled={entering !== null}
-            onEnter={enter}
-          />
         </div>
       </main>
 
@@ -276,16 +265,6 @@ const CARD_THEME: Record<PathId, CardTheme> = {
     dot: 'bg-[#7cc4e8]',
     cta: 'bg-[#cfe8f5] text-[#0b1624]',
     badge: 'border border-[#7cc4e8]/40 bg-[#7cc4e8]/10 text-[#7cc4e8]',
-  },
-  // La noche: indigo profundo, sin otra decoracion que el 💤.
-  sleep: {
-    card: 'bg-[#1e1b4b] bg-[radial-gradient(120%_120%_at_100%_0%,rgba(165,180,252,0.25)_0%,rgba(165,180,252,0)_60%)] ring-[#a5b4fc]/25 hover:ring-[#a5b4fc]/60 focus-visible:ring-[#a5b4fc]/60',
-    eyebrow: 'text-[#a5b4fc]',
-    title: 'text-[#eef2ff]',
-    body: 'text-[#eef2ff]/70',
-    dot: 'bg-[#a5b4fc]',
-    cta: 'bg-[#e0e7ff] text-[#1e1b4b]',
-    badge: 'bg-[#a5b4fc]/15 text-[#a5b4fc]',
   },
 };
 
