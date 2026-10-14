@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Swords, Trophy } from 'lucide-react';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { WinterArcAnalytics } from '../components/WinterArcAnalytics';
+import { WinterArcDebts } from '../components/WinterArcDebts';
 import { WinterArcGrid } from '../components/WinterArcGrid';
 import { WinterArcSchedule } from '../components/WinterArcSchedule';
 import { WinterArcLayout } from '../components/WinterArcLayout';
@@ -85,9 +86,10 @@ function CurrentArc() {
 }
 
 /**
- * El reto en curso: lo que toca hoy va primero (la orden del día, en el orden
- * de las horas) y el progreso de los 90 días debajo. Los dos leen el mismo
- * grid, así que al sincronizar se actualizan juntos.
+ * El reto en curso: lo que toca hoy va primero (las deudas por saldar y la
+ * orden del día, en el orden de las horas) y el progreso de los 90 días
+ * debajo. Todos leen el mismo grid, así que al sincronizar o pagar una deuda
+ * se actualizan juntos.
  */
 function ActiveArc({ winterArcId, commitment }: { winterArcId: string; commitment?: string }) {
   const grid = useWinterArcGrid(winterArcId);
@@ -95,6 +97,8 @@ function ActiveArc({ winterArcId, commitment }: { winterArcId: string; commitmen
   return (
     <div className="grid gap-6">
       <Commitment text={commitment} />
+
+      <WinterArcDebts grid={grid} />
 
       <WinterArcSchedule grid={grid} />
 
