@@ -305,6 +305,82 @@
   }
 }
 
+/* --- Winter Arc, la celebración -------------------------------------------
+   Cada regla cumplida es un golpe de acero: el punto del horario salta y una
+   frase sube y se desvanece. Al cumplir la última, el sello 侍 cae estampado
+   sobre la pantalla. El confeti es un canvas aparte (src/lib/confetti.ts). */
+@keyframes winter-strike-pop {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgb(43 127 168 / 0.55); }
+  35% { transform: scale(1.45); }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); box-shadow: 0 0 0 14px rgb(43 127 168 / 0); }
+}
+
+@keyframes winter-cheer-rise {
+  0% { opacity: 0; transform: translateY(6px) scale(0.9); }
+  15% { opacity: 1; transform: translateY(0) scale(1.05); }
+  70% { opacity: 1; transform: translateY(-14px) scale(1); }
+  100% { opacity: 0; transform: translateY(-30px) scale(1); }
+}
+
+@keyframes winter-seal-stamp {
+  0% { opacity: 0; transform: scale(3.2) rotate(-24deg); }
+  55% { opacity: 1; transform: scale(0.9) rotate(-4deg); }
+  70% { transform: scale(1.06) rotate(-7deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-6deg); }
+}
+
+@keyframes winter-seal-ink {
+  0% { opacity: 0.7; transform: scale(0.6); }
+  100% { opacity: 0; transform: scale(1.9); }
+}
+
+@keyframes winter-forged-in {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@layer components {
+  .winter-strike-pop {
+    animation: winter-strike-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .winter-cheer {
+    animation: winter-cheer-rise 2.4s ease-out forwards;
+  }
+
+  .winter-seal-stamp {
+    animation: winter-seal-stamp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* La tinta que salpica al golpear el sello: sale cuando el sello toca. */
+  .winter-seal-ink {
+    animation: winter-seal-ink 0.9s ease-out 0.38s both;
+  }
+
+  .winter-forged-in {
+    animation: winter-forged-in 0.5s ease-out 0.45s both;
+  }
+
+  /* Sin movimiento todo aparece ya en su sitio, sin saltos ni salpicaduras. */
+  @media (prefers-reduced-motion: reduce) {
+    .winter-strike-pop,
+    .winter-seal-stamp,
+    .winter-forged-in {
+      animation: none;
+    }
+
+    .winter-cheer {
+      animation: none;
+      opacity: 1;
+    }
+
+    .winter-seal-ink {
+      display: none;
+    }
+  }
+}
+
 /* --- Winter Arc, el manifiesto --------------------------------------------
    Los interruptores del cuerpo: al aparecer se apaga la máquina de placer y,
    después, se enciende el samurái. Tailwind deja cada uno en su estado final;

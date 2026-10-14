@@ -8,6 +8,28 @@
 //
 // La última etapa no se alcanza contando días: es la del reto completado.
 
+import type { WinterArcGrid } from '../types/winterArc';
+
+/**
+ * Hoy ya está forjado: el día se sincronizó con éxito o, con el reto activo,
+ * todas las reglas ya tienen repetición hoy. Lo segundo basta aunque no se
+ * haya sincronizado: al cerrar el día a medianoche el backend lo juzga con
+ * esas mismas repeticiones.
+ */
+export function isTodayForged(grid: WinterArcGrid): boolean {
+  const todayDay = grid.days.find((day) => day.date === grid.today);
+  if (!todayDay) return false;
+  if (todayDay.is_successful) return true;
+  const schedule = grid.schedule ?? [];
+  return grid.status === 'active' && schedule.length > 0 && schedule.every((item) => item.done_today);
+}
+
+/** Días forjados del reto, contando hoy en cuanto está forjado (isTodayForged). */
+export function countForgedDays(grid: WinterArcGrid): number {
+  const others = grid.days.filter((day) => day.is_successful && day.date !== grid.today).length;
+  return others + (isTodayForged(grid) ? 1 : 0);
+}
+
 /** Una etapa de la forja. */
 export interface ForgeStage {
   /** Un solo ideograma, para el sello de la etapa. */

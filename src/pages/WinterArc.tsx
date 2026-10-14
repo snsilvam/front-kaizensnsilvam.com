@@ -3,6 +3,7 @@ import { Swords, Trophy } from 'lucide-react';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { WinterArcAnalytics } from '../components/WinterArcAnalytics';
 import { WinterArcDebts } from '../components/WinterArcDebts';
+import { WinterArcForgedStreak } from '../components/WinterArcForgedStreak';
 import { WinterArcGrid } from '../components/WinterArcGrid';
 import { WinterArcSchedule } from '../components/WinterArcSchedule';
 import { WinterArcLayout } from '../components/WinterArcLayout';
@@ -22,7 +23,9 @@ import { WINTER_ARC_MAX_CONSECUTIVE_FAILURES, WINTER_ARC_MIN_RULES } from '../ty
  * llega ?id=<winterArcId> muestra ese reto, para no romper enlaces viejos.
  *
  * El manifiesto va siempre, haya reto o no: es la identidad del camino y se
- * pinta sin esperar a ninguna peticion.
+ * pinta sin esperar a ninguna peticion. Con el reto activo, la racha de dias
+ * forjados va antes que el, justo bajo el titulo; por eso cada vista recibe el
+ * manifiesto y decide donde ponerlo.
  */
 export function WinterArc() {
   const winterArcId = new URLSearchParams(window.location.search).get('id');
@@ -34,35 +37,56 @@ export function WinterArc() {
           Tu Winter Arc
         </h1>
 
-        <WinterArcManifesto />
-
-        {winterArcId ? <ActiveArc winterArcId={winterArcId} /> : <CurrentArc />}
+        {winterArcId ? (
+          <ActiveArc winterArcId={winterArcId} manifesto={<WinterArcManifesto />} />
+        ) : (
+          <CurrentArc manifesto={<WinterArcManifesto />} />
+        )}
       </div>
     </WinterArcLayout>
   );
 }
 
-function CurrentArc() {
+function CurrentArc({ manifesto }: { manifesto: ReactNode }) {
   const current = useCurrentWinterArc();
 
   if (current.loading) {
-    return <Skeleton className="h-48 w-full rounded-xl" aria-label="Cargando tu Winter Arc" />;
+    return (
+      <>
+        {manifesto}
+        <Skeleton className="h-48 w-full rounded-xl" aria-label="Cargando tu Winter Arc" />
+      </>
+    );
   }
 
   if (current.error) {
-    return <ErrorMessage title="No pudimos cargar tu Winter Arc" message={current.error} onRetry={current.reload} />;
+    return (
+      <>
+        {manifesto}
+        <ErrorMessage title="No pudimos cargar tu Winter Arc" message={current.error} onRetry={current.reload} />
+      </>
+    );
   }
 
-  if (current.notFound || !current.data) return <NoArc />;
+  if (current.notFound || !current.data) {
+    return (
+      <>
+        {manifesto}
+        <NoArc />
+      </>
+    );
+  }
 
   if (current.data.status === 'active') {
-    return <ActiveArc winterArcId={current.data.id} commitment={current.data.commitment} />;
+    return <ActiveArc winterArcId={current.data.id} commitment={current.data.commitment} manifesto={manifesto} />;
   }
 
   // Reto terminado (perdido o completado): su retrospectiva encabeza, el grid
   // queda debajo como registro y se puede volver a la forja.
   return (
     <div className="grid gap-6">
+      {manifesto}
+
       {current.data.status === 'completed' && (
         <Alert>
           <Trophy aria-hidden="true" />
@@ -86,16 +110,28 @@ function CurrentArc() {
 }
 
 /**
- * El reto en curso: lo que toca hoy va primero (las deudas por saldar y la
- * orden del día, en el orden de las horas) y el progreso de los 90 días
- * debajo. Todos leen el mismo grid, así que al sincronizar o pagar una deuda
+ * El reto en curso: la racha de días forjados encabeza, luego lo que toca hoy
+ * (las deudas por saldar y la orden del día, en el orden de las horas) y el
+ * progreso de los 90 días debajo. Todos leen el mismo grid, así que al sincronizar o pagar una deuda
  * se actualizan juntos.
  */
-function ActiveArc({ winterArcId, commitment }: { winterArcId: string; commitment?: string }) {
+function ActiveArc({
+  winterArcId,
+  commitment,
+  manifesto,
+}: {
+  winterArcId: string;
+  commitment?: string;
+  manifesto: ReactNode;
+}) {
   const grid = useWinterArcGrid(winterArcId);
 
   return (
     <div className="grid gap-6">
+      <WinterArcForgedStreak grid={grid} />
+
+      {manifesto}
+
       <Commitment text={commitment} />
 
       <WinterArcDebts grid={grid} />
@@ -104,7 +140,7 @@ function ActiveArc({ winterArcId, commitment }: { winterArcId: string; commitmen
 
       <Card>
         <CardContent>
-          <WinterArcGrid winterArcId={winterArcId} grid={grid} />
+          <WinterArcGrid winterArcId={winterArcId} grid={grid} hideDaySummary />
         </CardContent>
       </Card>
     </div>

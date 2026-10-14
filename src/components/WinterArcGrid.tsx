@@ -6,6 +6,7 @@ import { Skeleton } from './ui/skeleton';
 import { SurvivalFlame } from './SurvivalFlame';
 import { WinterArcForge } from './WinterArcForge';
 import type { UseWinterArcGrid } from '../hooks/useWinterArcGrid';
+import { countForgedDays, isTodayForged } from '../lib/samuraiForge';
 import { cn } from '../lib/utils';
 import { ApiError } from '../services/api';
 import { syncWinterArcToday } from '../services/winterArc';
@@ -20,6 +21,12 @@ interface WinterArcGridProps {
    * horario del día: al sincronizar se recargan los dos.
    */
   grid: UseWinterArcGrid;
+  /**
+   * La fila "Día X de 90 · llama · días forjados" ya va en grande arriba
+   * (WinterArcForgedStreak), así que aquí se omite. El reto perdido sigue
+   * mostrando su cierre.
+   */
+  hideDaySummary?: boolean;
 }
 
 /**
@@ -31,7 +38,7 @@ interface WinterArcGridProps {
  * Si el reto se perdió (3 días fallados seguidos, lo decide el backend) la
  * llama queda en cenizas, el grid pasa a grises y ya no se puede sincronizar.
  */
-export function WinterArcGrid({ winterArcId, grid }: WinterArcGridProps) {
+export function WinterArcGrid({ winterArcId, grid, hideDaySummary = false }: WinterArcGridProps) {
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
 
@@ -54,7 +61,8 @@ export function WinterArcGrid({ winterArcId, grid }: WinterArcGridProps) {
   } = grid.data;
   const failed = grid.data.status === 'failed';
   const todayDay = days.find((day) => day.date === today);
-  const successes = days.filter((day) => day.is_successful).length;
+  const successes = countForgedDays(grid.data);
+  const todayForged = isTodayForged(grid.data);
   // Con el reto perdido el error de sincronizar ya no aporta nada: lo dice la pantalla.
   const alertMessage = failed ? grid.error : (syncError ?? grid.error);
 
@@ -94,7 +102,7 @@ export function WinterArcGrid({ winterArcId, grid }: WinterArcGridProps) {
               </span>
             </p>
           </div>
-        ) : (
+        ) : hideDaySummary ? null : (
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <p className="flex items-center gap-2 text-lg font-semibold tracking-[-0.02em]">
               {todayDay ? `Día ${todayDay.day_number} de ${days.length}` : `${startDate} → ${endDate}`}
@@ -115,7 +123,7 @@ export function WinterArcGrid({ winterArcId, grid }: WinterArcGridProps) {
                 <li key={`pad-${i}`} aria-hidden="true" className="size-4" />
               ))}
               {days.map((day) => {
-                const state = dayState(day, today);
+                const state = day.date === today && todayForged ? 'success' : dayState(day, today);
                 return (
                   <li
                     key={day.day_number}
