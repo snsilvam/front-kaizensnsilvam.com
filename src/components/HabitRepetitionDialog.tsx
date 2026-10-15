@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react';
-import { CheckCheck, Timer } from 'lucide-react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { CheckCheck, Timer, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { formatDayKey } from '../lib/habitDates';
@@ -40,26 +40,53 @@ export function HabitRepetitionDialog({
   const [description, setDescription] = useState('');
   const alreadyRegistered = Boolean(existing?.hasRepetition);
 
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !saving) onClose();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [saving, onClose]);
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void onConfirm({ isMinimum, description: description.trim() });
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/35 p-4">
+    <div
+      className="fixed inset-0 z-50 flex animate-in items-end justify-center bg-foreground/40 backdrop-blur-[2px] fade-in duration-150 sm:items-center sm:p-4"
+      onClick={(event) => {
+        if (event.target === event.currentTarget && !saving) onClose();
+      }}
+    >
       <div
-        className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl"
+        className="max-h-[92dvh] w-full max-w-md animate-in overflow-y-auto overscroll-contain rounded-t-3xl border border-border bg-card px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl duration-200 slide-in-from-bottom-6 sm:rounded-2xl sm:p-6 sm:zoom-in-95 sm:slide-in-from-bottom-0"
         role="dialog"
         aria-modal="true"
         aria-labelledby="habit-repetition-title"
         aria-describedby="habit-repetition-description"
       >
-        <div className="grid size-11 place-items-center rounded-full bg-accent text-primary">
-          {(alreadyRegistered ? existing?.isMinimum : isMinimum) ? (
-            <Timer aria-hidden="true" className="size-5" />
-          ) : (
-            <CheckCheck aria-hidden="true" className="size-5" />
-          )}
+        <div aria-hidden="true" className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-border sm:hidden" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="grid size-11 place-items-center rounded-full bg-accent text-primary">
+            {(alreadyRegistered ? existing?.isMinimum : isMinimum) ? (
+              <Timer aria-hidden="true" className="size-5" />
+            ) : (
+              <CheckCheck aria-hidden="true" className="size-5" />
+            )}
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-lg"
+            className="-mt-1 -mr-2 text-muted-foreground"
+            aria-label="Cerrar"
+            disabled={saving}
+            onClick={onClose}
+          >
+            <X aria-hidden="true" />
+          </Button>
         </div>
         <h2 id="habit-repetition-title" className="mt-4 text-lg font-semibold text-foreground">
           {alreadyRegistered ? 'Repetición registrada' : 'Registrar repetición'}
@@ -99,12 +126,14 @@ export function HabitRepetitionDialog({
                   onSelect={() => setIsMinimum(false)}
                   title="Completa"
                   detail="Hiciste el hábito entero."
+                  icon={<CheckCheck aria-hidden="true" className="size-4" />}
                 />
                 <RepetitionOption
                   selected={isMinimum}
                   onSelect={() => setIsMinimum(true)}
                   title="Mínima (2 min)"
                   detail={minimumAction || 'La versión más pequeña.'}
+                  icon={<Timer aria-hidden="true" className="size-4" />}
                 />
               </div>
             </fieldset>
@@ -131,12 +160,12 @@ export function HabitRepetitionDialog({
               <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
             )}
 
-            <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:gap-3">
+              <Button type="button" variant="outline" size="lg" onClick={onClose} disabled={saving}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? 'Guardando...' : 'Registrar'}
+              <Button type="submit" size="lg" disabled={saving}>
+                {saving ? 'Guardando…' : 'Registrar'}
               </Button>
             </div>
           </form>
@@ -172,22 +201,27 @@ function RepetitionOption({
   onSelect,
   title,
   detail,
+  icon,
 }: {
   selected: boolean;
   onSelect: () => void;
   title: string;
   detail: string;
+  icon: ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${
+      className={`rounded-xl border px-3 py-3 text-left transition-colors ${
         selected ? 'border-primary/40 bg-accent' : 'border-border bg-background hover:bg-muted'
       }`}
     >
-      <span className={`block text-sm font-semibold ${selected ? 'text-primary' : 'text-foreground'}`}>
+      <span
+        className={`flex items-center gap-1.5 text-sm font-semibold ${selected ? 'text-primary' : 'text-foreground'}`}
+      >
+        {icon}
         {title}
       </span>
       <span className="mt-0.5 block line-clamp-2 text-xs text-muted-foreground">{detail}</span>

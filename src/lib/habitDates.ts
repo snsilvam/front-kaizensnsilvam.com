@@ -13,6 +13,9 @@ const MONTH_NAMES = [
 /** Etiquetas de la cabecera del calendario; la semana arranca en lunes. */
 export const WEEKDAY_LABELS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
+/** Nombres por getUTCDay(): 0 = domingo. */
+const WEEKDAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
 /** Dia contable de hoy en la zona horaria del habito (o la del navegador). */
 export function todayKey(timezone?: string): string {
   try {
@@ -86,6 +89,28 @@ export function formatDayKey(dayKey: string): string {
 export function formatDayMonth(dayKey: string): string {
   const { month, day } = parseDayKey(dayKey);
   return `${day} de ${MONTH_NAMES[month - 1] ?? ''}`;
+}
+
+/** "2026-10-15" -> "jueves 15 de octubre". */
+export function formatWeekdayDayMonth(dayKey: string): string {
+  return `${WEEKDAY_NAMES[utcDate(dayKey).getUTCDay()]} ${formatDayMonth(dayKey)}`;
+}
+
+/** Indice del dia en la semana que arranca en lunes: 0 = lunes, 6 = domingo. */
+export function weekdayIndex(dayKey: string): number {
+  return (utcDate(dayKey).getUTCDay() + 6) % 7;
+}
+
+/** Mueve `dayKey` `delta` dias; el mes y el año se ajustan solos. */
+export function shiftDay(dayKey: string, delta: number): string {
+  const { year, month, day } = parseDayKey(dayKey);
+  const date = new Date(Date.UTC(year, month - 1, day + delta));
+  return toDayKey(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
+}
+
+function utcDate(dayKey: string): Date {
+  const { year, month, day } = parseDayKey(dayKey);
+  return new Date(Date.UTC(year, month - 1, day));
 }
 
 /** Dia del mes como numero, para pintar la celda del calendario. */

@@ -215,6 +215,49 @@
   }
 }
 
+/* --- Kaizen Habits, la piel del camino -------------------------------------
+   El dojo de dia: papel washi calido de fondo y el verde matcha como foco. El
+   header sumi (oscuro) queda arriba como el kakemono; el contenido respira en
+   claro para que marcar un habito se sienta ligero. Se aplica en el contenedor
+   de /habits, igual que la piel del Winter Arc. */
+@layer base {
+  .habits-theme {
+    --background: #f7f3ea;
+    --foreground: #1b2532;
+    --card: #fffdf8;
+    --card-foreground: #1b2532;
+    --popover: #fffdf8;
+    --popover-foreground: #1b2532;
+    --muted: #f1ebdf;
+    --muted-foreground: #6b6455;
+    --secondary: #f1ebdf;
+    --secondary-foreground: #1b2532;
+    --border: #e8e0d0;
+    --input: #ddd3c0;
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+}
+
+/* El check de un habito al marcarse: crece, rebota y se asienta. */
+@keyframes habit-check-pop {
+  0% { transform: scale(0.6); }
+  55% { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+
+@layer components {
+  .habit-check-pop {
+    animation: habit-check-pop 0.35s ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .habit-check-pop {
+      animation: none;
+    }
+  }
+}
+
 /* --- Sueno, la piel del modal 💤 -------------------------------------------
    El sueno no es un camino: es un modal que se abre desde los headers de
    Habitos y Winter Arc. Lleva la noche indigo del 💤 en los dos, asi que

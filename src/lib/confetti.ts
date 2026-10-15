@@ -10,6 +10,9 @@ export const FROST_COLORS = ['#2b7fa8', '#7cc4e8', '#cfe8f5', '#eef7fc', '#0b162
 /** Las chispas del yunque. */
 export const EMBER_COLORS = ['#f59e0b', '#fb923c', '#fde68a'];
 
+/** Kaizen Habits: el verde matcha, el oro viejo, el bermellón y el papel washi. */
+export const HABIT_COLORS = ['#1f6a4b', '#5f9e7c', '#c9a227', '#c8362d', '#f4efe4'];
+
 type Shape = 'strip' | 'flake' | 'spark';
 
 interface Particle {
@@ -39,6 +42,8 @@ export interface BurstOptions {
   speed?: number;
   /** Proporción de chispas de forja, de 0 a 1. */
   embers?: number;
+  /** Colores del confeti; por defecto, la escarcha del Winter Arc. */
+  colors?: string[];
 }
 
 const GRAVITY = 0.32;
@@ -64,6 +69,7 @@ export function burst({
   spread = Math.PI / 1.6,
   speed = 11,
   embers = 0.2,
+  colors = FROST_COLORS,
 }: BurstOptions): void {
   if (prefersReducedMotion() || !ensureCanvas()) return;
 
@@ -80,7 +86,7 @@ export function burst({
       rotation: Math.random() * Math.PI * 2,
       spin: (Math.random() - 0.5) * 0.35,
       size: shape === 'spark' ? 1.5 + Math.random() * 1.5 : 5 + Math.random() * 5,
-      color: pick(ember ? EMBER_COLORS : FROST_COLORS),
+      color: pick(ember ? EMBER_COLORS : colors),
       shape,
       age: 0,
       // Las chispas se apagan rápido; la escarcha cae despacio.
@@ -95,10 +101,10 @@ export function burst({
 }
 
 /** Dos cañones desde las esquinas de abajo, hacia el centro: la celebración grande. */
-export function cannons(count = 90): void {
+export function cannons(count = 90, colors = FROST_COLORS): void {
   const { innerWidth: w, innerHeight: h } = window;
-  burst({ x: 0, y: h, count, angle: -Math.PI / 3, spread: Math.PI / 5, speed: 22, embers: 0.15 });
-  burst({ x: w, y: h, count, angle: (-2 * Math.PI) / 3, spread: Math.PI / 5, speed: 22, embers: 0.15 });
+  burst({ x: 0, y: h, count, angle: -Math.PI / 3, spread: Math.PI / 5, speed: 22, embers: 0.15, colors });
+  burst({ x: w, y: h, count, angle: (-2 * Math.PI) / 3, spread: Math.PI / 5, speed: 22, embers: 0.15, colors });
 }
 
 function ensureCanvas(): boolean {

@@ -1,145 +1,192 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
-import { CalendarDays, CheckCheck, Hammer, Pencil, Plus, Timer, Trash2 } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import { Alert, AlertDescription } from '../components/ui/alert';
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
+import { useEffect, useMemo, useState } from 'react';
 import { Skeleton } from '../components/ui/skeleton';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { ErrorMessage } from '../components/ErrorMessage';
-import { HabitBushidoPath } from '../components/HabitBushidoPath';
-import { HabitCalendar } from '../components/HabitCalendar';
-import { HabitGoalCard } from '../components/HabitGoalCard';
-import { HabitList } from '../components/HabitList';
+import { HabitDetail } from '../components/HabitDetail';
 import { HabitRepetitionDialog } from '../components/HabitRepetitionDialog';
-import { HabitStats } from '../components/HabitStats';
+import { HabitWizard } from '../components/HabitWizard';
 import { HabitsHeader } from '../components/HabitsHeader';
+import { HabitsToday } from '../components/HabitsToday';
+import { useHabitsToday } from '../hooks/useHabitsToday';
 import { useKaizenHabitTracking } from '../hooks/useKaizenHabitTracking';
 import { useKaizenHabits } from '../hooks/useKaizenHabits';
-import { browserTimezone, monthStart, shiftMonth, todayKey } from '../lib/habitDates';
+import { HABIT_COLORS, burst, cannons } from '../lib/confetti';
+import { formatDayMonth, monthStart, shiftMonth, todayKey } from '../lib/habitDates';
+import { byHabitTime, type HabitTemplate } from '../lib/habitTemplates';
+import { cn } from '../lib/utils';
 import { ApiError } from '../services/api';
-import {
-  deleteKaizenHabit,
-  registerKaizenHabit,
-  registerKaizenHabitRepetition,
-  updateKaizenHabit,
-} from '../services/kaizenHabits';
+import { deleteKaizenHabit, registerKaizenHabitRepetition } from '../services/kaizenHabits';
 import type { KaizenHabit } from '../types/kaizenHabit';
 
-/**
- * Estado del formulario de habitos: cerrado, creando o editando uno concreto.
- * Es un union y no dos booleanos porque los tres estados se excluyen.
- */
-type HabitEditor = null | { mode: 'create' } | { mode: 'edit'; habit: KaizenHabit };
+/** `/habits?habito=<id>` abre el detalle; sin el parametro, el dia de hoy. */
+const HABIT_PARAM = 'habito';
 
-interface HabitForm {
-  name: string;
-  description: string;
-  identity: string;
-  cue: string;
-  attractiveness: string;
-  action: string;
-  minimumAction2min: string;
-  reward: string;
-  time: string;
-  location: string;
-  active: boolean;
+/**
+ * Estado del asistente de habitos: cerrado, creando (quiza desde una
+ * plantilla) o editando uno concreto. Es un union porque se excluyen.
+ */
+type HabitEditor =
+  | null
+  | { mode: 'create'; template: HabitTemplate | null }
+  | { mode: 'edit'; habit: KaizenHabit };
+
+interface Toast {
+  id: number;
+  message: string;
+  tone: 'success' | 'error';
 }
 
-const initialHabit: HabitForm = {
-  name: 'Leer 10 páginas',
-  description: 'Leer antes de dormir',
-  identity: 'Soy una persona que lee',
-  cue: 'Después de cepillarme los dientes',
-  attractiveness: '',
-  action: 'Abrir el libro y leer',
-  minimumAction2min: 'Leer una página',
-  reward: '',
-  time: '21:30',
-  location: 'Habitación',
-  active: true,
-};
+function habitIdFromUrl(): string | null {
+  return new URLSearchParams(window.location.search).get(HABIT_PARAM);
+}
 
+function messageOf(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
+}
+
+/**
+ * Kaizen Habits. Dos vistas en la misma ruta: "hoy" (que me falta y marcarlo
+ * de un toque) y el detalle de un habito (su sistema, su cadena y su camino).
+ * El detalle vive en la URL para que el boton atras del movil vuelva a hoy.
+ */
 export function Habits() {
   const habits = useKaizenHabits();
-  const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
-  // El formulario esta cerrado (null), creando o editando un habito concreto.
-  const [editor, setEditor] = useState<HabitEditor>(null);
-
-  const selectedHabit = useMemo(
-    () => habits.data?.find((habit) => habit.id === selectedHabitId) ?? null,
-    [habits.data, selectedHabitId],
+  const activeHabits = useMemo(
+    () => (habits.data ?? []).filter((habit) => habit.active).sort(byHabitTime),
+    [habits.data],
   );
+  const pausedHabits = useMemo(
+    () => (habits.data ?? []).filter((habit) => !habit.active).sort(byHabitTime),
+    [habits.data],
+  );
+  const day = useHabitsToday(activeHabits);
 
+  const [openHabitId, setOpenHabitId] = useState<string | null>(habitIdFromUrl);
+  const openHabit = useMemo(
+    () => habits.data?.find((habit) => habit.id === openHabitId) ?? null,
+    [habits.data, openHabitId],
+  );
   // El dia contable depende de la zona horaria del habito, no del navegador.
-  const today = todayKey(selectedHabit?.timezone);
-
+  const today = todayKey(openHabit?.timezone);
   const [visibleMonth, setVisibleMonth] = useState(() => monthStart(todayKey()));
-  const tracking = useKaizenHabitTracking(selectedHabitId, visibleMonth);
+  const tracking = useKaizenHabitTracking(openHabit?.id ?? null, visibleMonth);
 
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
-  const [savingRepetition, setSavingRepetition] = useState(false);
-  const [repetitionError, setRepetitionError] = useState('');
-  const [feedback, setFeedback] = useState('');
+  const [editor, setEditor] = useState<HabitEditor>(null);
+  const [savingHabitId, setSavingHabitId] = useState<string | null>(null);
+  const [dayDialog, setDayDialog] = useState<string | null>(null);
+  const [dialogError, setDialogError] = useState('');
   const [habitToDelete, setHabitToDelete] = useState<KaizenHabit | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState('');
+  const [toast, setToast] = useState<Toast | null>(null);
 
-  // Al abrir la pagina se selecciona el primer habito para no dejar el panel vacio.
+  // Atras / adelante del navegador mueven entre hoy y el detalle.
   useEffect(() => {
-    if (selectedHabitId || !habits.data || habits.data.length === 0) return;
-    setSelectedHabitId(habits.data[0].id);
-  }, [habits.data, selectedHabitId]);
+    function onPopState() {
+      setOpenHabitId(habitIdFromUrl());
+      setDayDialog(null);
+    }
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
-  function selectHabit(habit: KaizenHabit) {
-    setSelectedHabitId(habit.id);
-    setVisibleMonth(monthStart(todayKey(habit.timezone)));
-    setFeedback('');
-    setRepetitionError('');
+  // Un id de la URL que no es de ningun habito (borrado, enlace viejo) cae en hoy.
+  useEffect(() => {
+    if (!openHabitId || !habits.data || openHabit) return;
+    window.history.replaceState(null, '', '/habits');
+    setOpenHabitId(null);
+  }, [openHabitId, habits.data, openHabit]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), 4500);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
+  function notify(message: string, tone: Toast['tone'] = 'success') {
+    setToast({ id: Date.now(), message, tone });
   }
 
-  const days = tracking.calendar?.days ?? [];
-  // El calendario cargado es el del mes visible: solo ese mes conoce el estado de hoy.
-  const viewingCurrentMonth = visibleMonth === monthStart(today);
-  const todayEntry = viewingCurrentMonth ? days.find((day) => day.date === today) : undefined;
-  const selectedDayEntry = selectedDay ? days.find((day) => day.date === selectedDay) : undefined;
+  function showHabit(habit: KaizenHabit) {
+    window.history.pushState({ habitId: habit.id }, '', `/habits?${HABIT_PARAM}=${encodeURIComponent(habit.id)}`);
+    setOpenHabitId(habit.id);
+    setVisibleMonth(monthStart(todayKey(habit.timezone)));
+    window.scrollTo({ top: 0 });
+  }
 
-  async function saveRepetition(dayKey: string, input: { isMinimum: boolean; description: string }) {
-    if (!selectedHabitId) return;
+  function showToday() {
+    setOpenHabitId(null);
+    // Si el detalle se abrio desde hoy, volver es "atras": asi el boton del
+    // movil y el de la pantalla hacen lo mismo y el historial no crece.
+    if ((window.history.state as { habitId?: string } | null)?.habitId) {
+      window.history.back();
+      return;
+    }
+    window.history.replaceState(null, '', '/habits');
+    window.scrollTo({ top: 0 });
+  }
 
-    setSavingRepetition(true);
-    setRepetitionError('');
+  async function refresh(habit: KaizenHabit) {
+    if (openHabit?.id === habit.id) tracking.reload();
+    if (habit.active) await day.reloadHabit(habit).catch(() => day.reload());
+  }
 
+  /**
+   * Registra la repeticion de un dia. Un 409 (ese dia ya tenia repeticion) no
+   * es un error para el usuario: se refresca y listo. Los demas errores se
+   * relanzan para que quien llamo los muestre donde corresponde.
+   */
+  async function registerRepetition(
+    habit: KaizenHabit,
+    dayKey: string,
+    input: { isMinimum: boolean; description: string },
+    origin: HTMLElement | null,
+  ) {
+    const isToday = dayKey === todayKey(habit.timezone);
+    const completesDay =
+      isToday &&
+      habit.active &&
+      activeHabits.every((other) => other.id === habit.id || day.entries[other.id]?.today.hasRepetition);
+
+    setSavingHabitId(habit.id);
     try {
-      await registerKaizenHabitRepetition(selectedHabitId, {
-        occurredOn: dayKey,
-        isMinimum: input.isMinimum,
-        description: input.description,
-      });
-      setSelectedDay(null);
-      setFeedback(
-        input.isMinimum
-          ? 'Repetición mínima registrada. Lo importante es no romper la cadena.'
-          : 'Repetición registrada. Un día más construyendo tu identidad.',
+      await registerKaizenHabitRepetition(habit.id, { occurredOn: dayKey, ...input });
+      celebrate(origin, completesDay);
+      notify(
+        completesDay
+          ? '¡Día completo! Hoy fuiste la persona que quieres ser.'
+          : !isToday
+            ? `Registrado el ${formatDayMonth(dayKey)}.`
+            : input.isMinimum
+              ? 'Versión mínima hecha. La cadena sigue viva.'
+              : `+1 voto por «${habit.identity || habit.name}».`,
       );
-      tracking.reload();
+      await refresh(habit);
     } catch (requestError) {
-      // 409: ese dia ya tenia repeticion (solo se permite una por dia).
       if (requestError instanceof ApiError && requestError.status === 409) {
-        setSelectedDay(null);
-        setRepetitionError('');
-        setFeedback('Ese día ya tenía una repetición registrada.');
-        tracking.reload();
+        notify('Ese día ya tenía una repetición registrada.');
+        await refresh(habit);
         return;
       }
-      setRepetitionError(
-        requestError instanceof Error
-          ? requestError.message
-          : 'No fue posible registrar la repetición.',
-      );
+      throw requestError;
     } finally {
-      setSavingRepetition(false);
+      setSavingHabitId(null);
+    }
+  }
+
+  function registerToday(habit: KaizenHabit, isMinimum: boolean, origin: HTMLElement) {
+    registerRepetition(habit, todayKey(habit.timezone), { isMinimum, description: '' }, origin).catch(
+      (requestError: unknown) => notify(messageOf(requestError, 'No fue posible registrar la repetición.'), 'error'),
+    );
+  }
+
+  async function registerFromDialog(input: { isMinimum: boolean; description: string }) {
+    if (!openHabit || !dayDialog) return;
+    setDialogError('');
+    try {
+      await registerRepetition(openHabit, dayDialog, input, null);
+      setDayDialog(null);
+    } catch (requestError) {
+      setDialogError(messageOf(requestError, 'No fue posible registrar la repetición.'));
     }
   }
 
@@ -147,280 +194,129 @@ export function Habits() {
     if (!habitToDelete) return;
 
     setDeleting(true);
-    setDeleteError('');
-
     try {
       await deleteKaizenHabit(habitToDelete.id);
-      // La seleccion pasa al siguiente habito de la lista ya sin el borrado; el
-      // reload posterior solo confirma contra el backend.
-      const remaining = (habits.data ?? []).filter((habit) => habit.id !== habitToDelete.id);
       habits.remove(habitToDelete.id);
-      setSelectedHabitId(remaining[0]?.id ?? null);
       setHabitToDelete(null);
-      setFeedback(`Eliminaste "${habitToDelete.name}" y su historial.`);
+      notify(`Eliminaste «${habitToDelete.name}» y su historial.`);
+      showToday();
       habits.reload();
     } catch (requestError) {
       setHabitToDelete(null);
-      setDeleteError(
-        requestError instanceof Error ? requestError.message : 'No fue posible eliminar el hábito.',
-      );
+      notify(messageOf(requestError, 'No fue posible eliminar el hábito.'), 'error');
     } finally {
       setDeleting(false);
     }
   }
 
-  function openDay(dayKey: string) {
-    setRepetitionError('');
-    setFeedback('');
-    setSelectedDay(dayKey);
-  }
+  // El registro de hoy sale de la vista de hoy; un habito en pausa no esta en
+  // ella y se lee del calendario, si el mes visible es el actual.
+  const viewingCurrentMonth = visibleMonth === monthStart(today);
+  const todayEntry = openHabit
+    ? (day.entries[openHabit.id]?.today ??
+      (viewingCurrentMonth ? tracking.calendar?.days.find((entry) => entry.date === today) : undefined))
+    : undefined;
+  const dialogEntry =
+    dayDialog === today ? todayEntry : tracking.calendar?.days.find((entry) => entry.date === dayDialog);
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
+    <div className="habits-theme flex min-h-screen w-full flex-col">
       <HabitsHeader />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 sm:px-6">
-      <main className="flex-1 py-10 sm:py-14">
-        <section aria-labelledby="habits-title">
-          <div className="text-center">
-            <h1 id="habits-title" className="font-heading text-4xl font-bold tracking-[-0.055em] text-foreground sm:text-5xl">Kaizen Habits</h1>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">Diseña pequeños hábitos que te acerquen cada día a la persona que quieres ser.</p>
+      <main
+        className={cn(
+          'mx-auto w-full flex-1 px-4 pt-6 pb-28 sm:px-6 sm:pt-10',
+          openHabit ? 'max-w-4xl' : 'max-w-2xl',
+        )}
+      >
+        {habits.loading && !habits.data && (
+          <div className="grid gap-4" aria-busy="true" aria-label="Cargando tus hábitos">
+            <Skeleton className="h-44 rounded-3xl" />
+            <Skeleton className="h-28 rounded-2xl" />
+            <Skeleton className="h-28 rounded-2xl" />
           </div>
+        )}
 
-          {habits.loading && (
-            <div className="mt-10 grid gap-6 lg:grid-cols-[0.75fr_1.25fr]">
-              <Skeleton className="h-64 rounded-xl" />
-              <Skeleton className="h-64 rounded-xl" />
-            </div>
-          )}
+        {!habits.data && habits.error && (
+          <div className="flex justify-center">
+            <ErrorMessage title="No pudimos cargar tus hábitos" message={habits.error} onRetry={habits.reload} />
+          </div>
+        )}
 
-          {!habits.loading && habits.error && (
-            <div className="mt-10 flex justify-center">
-              <ErrorMessage
-                title="No pudimos cargar tus hábitos"
-                message={habits.error}
-                onRetry={habits.reload}
-              />
-            </div>
-          )}
-
-          {!habits.loading && !habits.error && (
-            <>
-              {!editor && (
-                <div className="mt-8 flex justify-center">
-                  <Button type="button" size="lg" onClick={() => setEditor({ mode: 'create' })}>
-                    <Hammer aria-hidden="true" />
-                    {habits.data && habits.data.length > 0 ? 'otro hábito?' : 'Forjar'}
-                  </Button>
-                </div>
-              )}
-
-              {editor && (
-                <HabitFormCard
-                  // La key reinicia el formulario al pasar de un habito a otro:
-                  // sin ella React reutiliza el estado del anterior.
-                  key={editor.mode === 'edit' ? editor.habit.id : 'nuevo'}
-                  existing={editor.mode === 'edit' ? editor.habit : null}
-                  onCancel={() => setEditor(null)}
-                  onSaved={(habit) => {
-                    const created = editor.mode === 'create';
-                    setEditor(null);
-                    habits.reload();
-                    setSelectedHabitId(habit.id);
-                    setVisibleMonth(monthStart(todayKey(habit.timezone)));
-                    setFeedback(
-                      created
-                        ? 'Hábito creado. Registra tu primera repetición cuando lo cumplas.'
-                        : 'Cambios guardados. Tu historial de repeticiones sigue intacto.',
-                    );
-                  }}
-                />
-              )}
-
-              <div className="mt-10 grid gap-6 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Tus hábitos</CardTitle>
-                    <CardDescription>Elige uno para registrar repeticiones y ver su racha.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <HabitList
-                      habits={habits.data ?? []}
-                      selectedId={selectedHabitId}
-                      onSelect={selectHabit}
-                    />
-                  </CardContent>
-                </Card>
-
-                {selectedHabit ? (
-                  <div className="grid gap-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>{selectedHabit.name}</CardTitle>
-                        <CardDescription>
-                          {selectedHabit.time || '--:--'}
-                          {selectedHabit.location ? ` · ${selectedHabit.location}` : ''}
-                        </CardDescription>
-                        <CardAction>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-muted-foreground hover:text-primary"
-                              onClick={() => {
-                                setDeleteError('');
-                                setFeedback('');
-                                setEditor({ mode: 'edit', habit: selectedHabit });
-                              }}
-                            >
-                              <Pencil aria-hidden="true" />
-                              <span className="hidden sm:inline">Editar</span>
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                              onClick={() => {
-                                setDeleteError('');
-                                setHabitToDelete(selectedHabit);
-                              }}
-                            >
-                              <Trash2 aria-hidden="true" />
-                              <span className="hidden sm:inline">Eliminar</span>
-                            </Button>
-                          </div>
-                        </CardAction>
-                      </CardHeader>
-                      <CardContent className="grid gap-4">
-                        {deleteError && (
-                          <Alert variant="destructive">
-                            <AlertDescription>{deleteError}</AlertDescription>
-                          </Alert>
-                        )}
-
-                        <div className="rounded-xl border border-primary/15 bg-accent/60 px-4 py-3.5">
-                          <p className="text-xs font-bold tracking-[0.08em] text-primary uppercase">Hoy</p>
-                          <p className="mt-1.5 text-sm text-foreground">
-                            {!viewingCurrentMonth
-                              ? 'Estás revisando otro mes del calendario.'
-                              : todayEntry?.hasRepetition
-                                ? todayEntry.isMinimum
-                                  ? 'Registraste la versión mínima. Cuenta para tu racha.'
-                                  : 'Repetición completa registrada. Cadena intacta.'
-                                : `Después de ${selectedHabit.cue || 'tu señal'}, ${selectedHabit.action || 'haz el hábito'}.`}
-                          </p>
-                          <div className="mt-3.5 flex flex-wrap gap-2">
-                            {viewingCurrentMonth ? (
-                              <>
-                                <Button type="button" onClick={() => openDay(today)} disabled={savingRepetition || tracking.loading}>
-                                  <CheckCheck aria-hidden="true" />
-                                  {todayEntry?.hasRepetition ? 'Ver registro de hoy' : 'Registrar hoy'}
-                                </Button>
-                                {!todayEntry?.hasRepetition && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={savingRepetition || tracking.loading}
-                                    onClick={() => void saveRepetition(today, { isMinimum: true, description: '' })}
-                                  >
-                                    <Timer aria-hidden="true" />
-                                    Solo la mínima
-                                  </Button>
-                                )}
-                              </>
-                            ) : (
-                              <Button type="button" variant="outline" onClick={() => setVisibleMonth(monthStart(today))}>
-                                <CalendarDays aria-hidden="true" />
-                                Volver a hoy
-                              </Button>
-                            )}
-                          </div>
-                          {feedback && <p className="mt-3 text-sm text-primary">{feedback}</p>}
-                          {repetitionError && !selectedDay && (
-                            <p className="mt-3 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                              {repetitionError}
-                            </p>
-                          )}
-                        </div>
-
-                        <HabitStats stats={tracking.stats} loading={tracking.loading} />
-                      </CardContent>
-                    </Card>
-
-                    <HabitBushidoPath stats={tracking.stats} loading={tracking.loading} />
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Calendario de repeticiones</CardTitle>
-                        <CardDescription>Toca cualquier día pasado para registrar la repetición que se te quedó pendiente.</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        {tracking.error ? (
-                          <ErrorMessage
-                            title="No pudimos cargar el calendario"
-                            message={tracking.error}
-                            onRetry={tracking.reload}
-                          />
-                        ) : (
-                          <HabitCalendar
-                            visibleMonth={visibleMonth}
-                            today={today}
-                            days={days}
-                            loading={tracking.loading}
-                            onMonthChange={(delta) => setVisibleMonth((current) => shiftMonth(current, delta))}
-                            onSelectDay={openDay}
-                          />
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    <HabitGoalCard
-                      habitId={selectedHabit.id}
-                      activeGoal={tracking.stats?.activeGoal ?? null}
-                      today={today}
-                      disabled={tracking.loading}
-                      onCreated={() => {
-                        setFeedback('Meta creada. Cada repetición suma a tu avance.');
-                        tracking.reload();
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Sin hábito seleccionado</CardTitle>
-                      <CardDescription>Forja tu primer hábito para empezar a registrar repeticiones, rachas y metas.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button type="button" variant="outline" onClick={() => setEditor({ mode: 'create' })}>
-                        <Plus aria-hidden="true" />
-                        Forjar hábito
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            </>
-          )}
-        </section>
+        {habits.data &&
+          (openHabit ? (
+            <HabitDetail
+              habit={openHabit}
+              today={today}
+              todayEntry={todayEntry}
+              calendar={tracking.calendar}
+              stats={tracking.stats}
+              loading={tracking.loading}
+              error={tracking.error}
+              onRetry={tracking.reload}
+              visibleMonth={visibleMonth}
+              onMonthChange={(delta) => setVisibleMonth((current) => shiftMonth(current, delta))}
+              saving={savingHabitId === openHabit.id}
+              onBack={showToday}
+              onEdit={() => setEditor({ mode: 'edit', habit: openHabit })}
+              onDelete={() => setHabitToDelete(openHabit)}
+              onRegisterToday={(isMinimum, origin) => registerToday(openHabit, isMinimum, origin)}
+              onOpenDay={(dayKey) => {
+                setDialogError('');
+                setDayDialog(dayKey);
+              }}
+              onGoalCreated={() => {
+                notify('Meta creada. Cada repetición suma a tu avance.');
+                tracking.reload();
+              }}
+            />
+          ) : (
+            <HabitsToday
+              habits={activeHabits}
+              paused={pausedHabits}
+              entries={day.entries}
+              error={day.error}
+              onRetry={day.reload}
+              savingHabitId={savingHabitId}
+              onOpen={showHabit}
+              onRegister={registerToday}
+              onCreate={(template) => setEditor({ mode: 'create', template: template ?? null })}
+            />
+          ))}
       </main>
-      </div>
 
-      {selectedHabit && selectedDay && (
-        <HabitRepetitionDialog
-          habitName={selectedHabit.name}
-          minimumAction={selectedHabit.minimumAction2min}
-          dayKey={selectedDay}
-          existing={selectedDayEntry}
-          saving={savingRepetition}
-          error={repetitionError}
-          onClose={() => {
-            setSelectedDay(null);
-            setRepetitionError('');
+      {editor && (
+        <HabitWizard
+          existing={editor.mode === 'edit' ? editor.habit : null}
+          template={editor.mode === 'create' ? editor.template : null}
+          onClose={() => setEditor(null)}
+          onSaved={(saved) => {
+            const created = editor.mode === 'create';
+            setEditor(null);
+            habits.reload();
+            if (!created && openHabit?.id === saved.id) tracking.reload();
+            notify(
+              created
+                ? `«${saved.name}» ya está en tu día. Tu primera repetición te espera.`
+                : 'Cambios guardados. Tu historial sigue intacto.',
+            );
           }}
-          onConfirm={(input) => saveRepetition(selectedDay, input)}
+        />
+      )}
+
+      {openHabit && dayDialog && (
+        <HabitRepetitionDialog
+          habitName={openHabit.name}
+          minimumAction={openHabit.minimumAction2min}
+          dayKey={dayDialog}
+          existing={dialogEntry}
+          saving={savingHabitId === openHabit.id}
+          error={dialogError}
+          onClose={() => {
+            setDayDialog(null);
+            setDialogError('');
+          }}
+          onConfirm={registerFromDialog}
         />
       )}
 
@@ -432,195 +328,43 @@ export function Habits() {
         onCancel={() => setHabitToDelete(null)}
         onConfirm={confirmDelete}
       />
+
+      <div
+        role="status"
+        aria-live="polite"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+      >
+        {toast && (
+          <p
+            key={toast.id}
+            className={cn(
+              'max-w-md animate-in rounded-2xl px-4 py-3 text-center text-sm font-medium shadow-lg duration-300 fade-in slide-in-from-bottom-4',
+              toast.tone === 'error' ? 'bg-destructive text-white' : 'bg-[#1b2532] text-[#f4efe4]',
+            )}
+          >
+            {toast.message}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
 
-interface HabitFormCardProps {
-  /** Habito a editar; null para crear uno nuevo. */
-  existing: KaizenHabit | null;
-  onCancel: () => void;
-  onSaved: (habit: KaizenHabit) => void;
-}
+/** El refuerzo de marcar: vibracion corta y confeti desde el boton tocado. */
+function celebrate(origin: HTMLElement | null, completesDay: boolean) {
+  navigator.vibrate?.(completesDay ? [20, 60, 30] : 15);
 
-/** Convierte el habito del backend en el estado del formulario. */
-function formOf(habit: KaizenHabit): HabitForm {
-  return {
-    name: habit.name,
-    description: habit.description,
-    identity: habit.identity,
-    cue: habit.cue,
-    attractiveness: habit.attractiveness,
-    action: habit.action,
-    minimumAction2min: habit.minimumAction2min,
-    reward: habit.reward,
-    time: habit.time,
-    location: habit.location,
-    active: habit.active,
-  };
-}
-
-/**
- * Formulario de creacion y de edicion; al guardar devuelve el habito.
- *
- * Es el mismo formulario en los dos casos porque el contrato es el mismo: el
- * PUT reemplaza todos los campos, igual que el POST los crea.
- */
-function HabitFormCard({ existing, onCancel, onSaved }: HabitFormCardProps) {
-  const editing = existing !== null;
-  const [habit, setHabit] = useState<HabitForm>(existing ? formOf(existing) : initialHabit);
-  const [forgeAnimation, setForgeAnimation] = useState(false);
-  const [error, setError] = useState('');
-
-  function updateField(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
-    const { name, value } = event.target;
-    setHabit((current) => ({ ...current, [name]: value }));
-    setError('');
+  if (origin) {
+    const rect = origin.getBoundingClientRect();
+    burst({
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+      count: 28,
+      speed: 8,
+      spread: Math.PI * 1.2,
+      embers: 0.1,
+      colors: HABIT_COLORS,
+    });
   }
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError('');
-    setForgeAnimation(true);
-
-    // La zona horaria define el dia contable de cada repeticion. Al editar se
-    // conserva la del habito: cambiarla movería los dias ya registrados.
-    const input = {
-      name: habit.name,
-      description: habit.description,
-      identity: habit.identity,
-      cue: habit.cue,
-      attractiveness: habit.attractiveness,
-      action: habit.action,
-      minimumAction2min: habit.minimumAction2min,
-      reward: habit.reward,
-      time: habit.time,
-      location: habit.location,
-      timezone: existing?.timezone ?? browserTimezone(),
-      active: habit.active,
-    };
-
-    try {
-      const saved = existing
-        ? await updateKaizenHabit(existing.id, input)
-        : await registerKaizenHabit(input);
-      onSaved(saved);
-    } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError.message
-          : editing
-            ? 'No fue posible guardar los cambios.'
-            : 'No fue posible crear el hábito.',
-      );
-    } finally {
-      setForgeAnimation(false);
-    }
-  }
-
-  return (
-    <div className="mt-10 grid gap-6 lg:grid-cols-[1.25fr_0.75fr] lg:items-start">
-      <Card>
-        <CardHeader>
-          <CardTitle>{editing ? 'Edita tu hábito' : 'Forja un nuevo hábito'}</CardTitle>
-          <CardDescription>
-            {editing
-              ? 'Ajusta la acción, el momento y el contexto. Tu historial de repeticiones no se toca.'
-              : 'Define la acción, el momento y el contexto que harán que tu hábito sea fácil de repetir.'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="grid gap-5" onSubmit={submit}>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Nombre" name="name" value={habit.name} onChange={updateField} required placeholder="Ej. Leer 10 páginas" />
-            <Field label="Identidad" name="identity" value={habit.identity} onChange={updateField} required placeholder="Soy una persona que..." />
-            <TextField label="Descripción" name="description" value={habit.description} onChange={updateField} required placeholder="¿En qué consiste?" />
-            <TextField label="Señal" name="cue" value={habit.cue} onChange={updateField} required placeholder="Después de..." />
-            <TextField label="Hazlo atractivo" name="attractiveness" value={habit.attractiveness} onChange={updateField} placeholder="¿Cómo lo harás más atractivo?" />
-            <TextField label="Acción" name="action" value={habit.action} onChange={updateField} required placeholder="La acción principal" />
-            <TextField label="Acción mínima (2 min)" name="minimumAction2min" value={habit.minimumAction2min} onChange={updateField} required placeholder="La versión más pequeña" />
-            <TextField label="Recompensa" name="reward" value={habit.reward} onChange={updateField} placeholder="¿Cómo te recompensarás?" />
-            <Field label="Hora" name="time" type="time" value={habit.time} onChange={updateField} required />
-            <Field label="Lugar" name="location" value={habit.location} onChange={updateField} required placeholder="Ej. Habitación" />
-          </div>
-          <label className="flex cursor-pointer items-center gap-3 text-sm font-medium">
-            <input type="checkbox" name="active" checked={habit.active} onChange={(event) => setHabit((current) => ({ ...current, active: event.target.checked }))} className="size-4 accent-primary" />
-            Hábito activo
-          </label>
-            {error && <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-            <Button type="button" variant="ghost" onClick={onCancel}>Cancelar</Button>
-            <Button type="submit" disabled={forgeAnimation}>
-              <Hammer aria-hidden="true" className={forgeAnimation ? 'animate-bounce' : undefined} />
-              {forgeAnimation
-                ? editing ? 'Guardando...' : 'Forjando...'
-                : editing ? 'Guardar cambios' : 'Forjar hábito'}
-            </Button>
-          </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <HabitPreview habit={habit} forgeAnimation={forgeAnimation} />
-    </div>
-  );
-}
-
-function HabitPreview({ habit, forgeAnimation }: { habit: HabitForm; forgeAnimation: boolean }) {
-  return (
-    <Card className={`overflow-visible border-primary/20 bg-gradient-to-br from-card to-accent/60 transition-all duration-300 ${forgeAnimation ? 'scale-[1.02] shadow-lg shadow-primary/20' : ''}`}>
-      <CardHeader>
-        <div className="flex items-center justify-between gap-3">
-          <CardTitle>Vista previa</CardTitle>
-          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">{habit.active ? 'Activo' : 'Pausado'}</span>
-        </div>
-        <CardDescription>Así se verá tu intención diaria.</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="relative overflow-hidden rounded-xl border border-primary/15 bg-background/80 p-4">
-          {forgeAnimation && <div className="absolute inset-x-0 top-0 h-1 animate-pulse bg-primary" />}
-          <p className="text-xs font-bold tracking-[0.1em] text-primary uppercase">Cada día</p>
-          <h2 className="mt-2 text-xl font-bold text-foreground">{habit.name || 'Tu nuevo hábito'}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{habit.identity || 'La identidad que estás construyendo'}</p>
-
-          <div className="mt-5 grid gap-3 text-sm">
-            <PreviewRow label="Después de" value={habit.cue} />
-            <PreviewRow label="Haré" value={habit.action} />
-            <PreviewRow label="En" value={`${habit.location || 'un lugar elegido'} · ${habit.time || '--:--'}`} />
-          </div>
-
-          <div className="mt-5 rounded-lg bg-accent px-3 py-2.5 text-sm text-primary">
-            Si tengo poco tiempo: <strong>{habit.minimumAction2min || 'una acción de 2 minutos'}</strong>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function PreviewRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="grid grid-cols-[5rem_1fr] gap-2">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium text-foreground">{value || '—'}</span>
-    </div>
-  );
-}
-
-interface FieldProps {
-  label: string;
-  name: string;
-  value: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  type?: string;
-  placeholder?: string;
-  required?: boolean;
-}
-
-function Field({ label, name, value, onChange, type = 'text', placeholder, required }: FieldProps) {
-  return <div className="grid gap-2"><Label htmlFor={`habit-${name}`}>{label}</Label><Input id={`habit-${name}`} name={name} type={type} value={value} onChange={onChange} placeholder={placeholder} required={required} /></div>;
-}
-
-function TextField({ label, name, value, onChange, placeholder, required }: Omit<FieldProps, 'type' | 'onChange'> & { onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void }) {
-  return <div className="grid gap-2"><Label htmlFor={`habit-${name}`}>{label}</Label><textarea id={`habit-${name}`} name={name} value={value} onChange={onChange} placeholder={placeholder} required={required} rows={2} className="w-full resize-y rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50" /></div>;
+  if (completesDay) cannons(70, HABIT_COLORS);
 }
