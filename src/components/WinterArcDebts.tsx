@@ -44,7 +44,7 @@ export function WinterArcDebts({ grid }: { grid: UseWinterArcGrid }) {
         </CardTitle>
         <CardDescription>
           Un día cedido se salva si pagas su deuda: haz hoy, además de lo de hoy, la repetición de cada hábito que
-          faltó. Tienes {WINTER_ARC_DEBT_PAYMENT_DAYS} días. Salva la racha, pero no forja acero.
+          faltó. Tienes {WINTER_ARC_DEBT_PAYMENT_DAYS} días. Salva la racha y cuenta como día forjado.
         </CardDescription>
       </CardHeader>
 
@@ -99,7 +99,7 @@ function DebtList({
       setPaying(null);
       strike(document.querySelector(`[data-strike-origin="${CSS.escape(`${debt.date}:${habit.habit_id}`)}"]`));
       if (debt.habits.every((h) => h.paid || h.habit_id === habit.habit_id)) {
-        onSettled(`Deuda del ${dayLabel(debt.date)} saldada: ese día ya no cuenta para la racha.`);
+        onSettled(`Deuda del ${dayLabel(debt.date)} saldada: ese día queda forjado.`);
       }
       reload();
     } catch (requestError) {

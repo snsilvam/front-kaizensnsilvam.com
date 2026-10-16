@@ -174,7 +174,7 @@ const STATE_CLASS: Record<DayState, string> = {
   today: 'bg-muted',
   // Acero templado: el azul de la escarcha, no el verde de finanzas.
   success: 'bg-[#2b7fa8]',
-  // Escarcha clara: el día se salvó pagando la deuda, pero no se forjó.
+  // Escarcha clara: el día se forjó tarde, pagando la deuda. Cuenta como forjado.
   paid: 'bg-[#7cc4e8]',
   failed: 'bg-destructive',
 };

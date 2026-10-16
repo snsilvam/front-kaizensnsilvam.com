@@ -3,8 +3,9 @@
 // Una katana no sale de un golpe: el acero en bruto se pliega, se templa y se
 // pule hasta tener filo. El Winter Arc forja al samurái igual, con cada día en
 // que se cumplen todas las Reglas Inquebrantables. Por eso el umbral son los
-// días forjados (exitosos) y no la racha: un día cedido al placer no deshace
-// el acero ya trabajado.
+// días forjados (exitosos o con la deuda pagada) y no la racha: un día cedido
+// al placer no deshace el acero ya trabajado, y pagar su deuda lo vuelve a
+// forjar.
 //
 // La última etapa no se alcanza contando días: es la del reto completado.
 
@@ -24,9 +25,12 @@ export function isTodayForged(grid: WinterArcGrid): boolean {
   return grid.status === 'active' && schedule.length > 0 && schedule.every((item) => item.done_today);
 }
 
-/** Días forjados del reto, contando hoy en cuanto está forjado (isTodayForged). */
+/**
+ * Días forjados del reto: los exitosos y los fallados con la deuda pagada,
+ * contando hoy en cuanto está forjado (isTodayForged).
+ */
 export function countForgedDays(grid: WinterArcGrid): number {
-  const others = grid.days.filter((day) => day.is_successful && day.date !== grid.today).length;
+  const others = grid.days.filter((day) => (day.is_successful || day.debt_paid) && day.date !== grid.today).length;
   return others + (isTodayForged(grid) ? 1 : 0);
 }
 
