@@ -42,8 +42,8 @@ export interface WinterArcDay {
   /** false también para los días que nunca se sincronizaron. */
   is_successful: boolean;
   /**
-   * Día fallado cuya deuda se pagó: cuenta como cumplido para la racha, pero
-   * `is_successful` sigue en false, así que no es un día forjado.
+   * Día fallado cuya deuda se pagó: cuenta como cumplido para la racha y como
+   * día forjado (countForgedDays), aunque `is_successful` sigue en false.
    */
   debt_paid: boolean;
 }
