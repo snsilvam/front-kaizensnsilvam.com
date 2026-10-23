@@ -7,11 +7,12 @@ import { Card, CardContent, CardHeader } from './ui/card';
 import { Skeleton } from './ui/skeleton';
 import { useWinterArcAnalytics } from '../hooks/useWinterArcAnalytics';
 import { cn } from '../lib/utils';
-import type {
-  IsoWeekday,
-  WinterArcAnchorHabit,
-  WinterArcHabitTally,
-  WinterArcWeekdayStat,
+import {
+  WINTER_ARC_REST_WEEKDAY,
+  type IsoWeekday,
+  type WinterArcAnchorHabit,
+  type WinterArcHabitTally,
+  type WinterArcWeekdayStat,
 } from '../types/winterArc';
 
 interface WinterArcAnalyticsProps {
@@ -118,10 +119,16 @@ function Patterns({ weekdays, best, worst }: PatternsProps) {
         {weekdays.map((day) => {
           const rate = successRate(day);
           const highlighted = day.weekday === best || day.weekday === worst;
+          // El domingo es libre: no se evalúa, así que no tiene tasa que mostrar.
+          const rest = day.weekday === WINTER_ARC_REST_WEEKDAY && day.evaluated_days === 0;
           return (
             <li
               key={day.weekday}
-              title={`${WEEKDAY_NAME[day.weekday]}: ${day.successful_days} de ${day.evaluated_days} días cumplidos`}
+              title={
+                rest
+                  ? `${WEEKDAY_NAME[day.weekday]}: día libre`
+                  : `${WEEKDAY_NAME[day.weekday]}: ${day.successful_days} de ${day.evaluated_days} días cumplidos`
+              }
               className="grid grid-cols-[2.25rem_1fr_2.75rem] items-center gap-3 text-xs"
             >
               <span className={cn('text-muted-foreground', highlighted && 'font-semibold text-foreground')}>
@@ -136,7 +143,7 @@ function Patterns({ weekdays, best, worst }: PatternsProps) {
                   style={{ width: `${rate}%` }}
                 />
               </span>
-              <span className="text-right font-mono text-muted-foreground">{rate} %</span>
+              <span className="text-right font-mono text-muted-foreground">{rest ? 'libre' : `${rate} %`}</span>
             </li>
           );
         })}

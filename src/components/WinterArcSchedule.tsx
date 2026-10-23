@@ -89,6 +89,8 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
   const nowIndex = slots.findIndex((slot) => slot.minutes > now);
   const markerAt = nowIndex === -1 ? slots.length : nowIndex;
   const today = grid.data.today;
+  // El domingo es libre: se puede entrenar, pero no hay día que forjar.
+  const restDay = grid.data.days.some((day) => day.date === today && day.is_rest_day);
 
   function openRegister(item: WinterArcScheduleItem) {
     setSaveError('');
@@ -109,7 +111,7 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
       const cheer = strike(document.querySelector(`[data-strike-origin="${CSS.escape(item.habit_id)}"]`));
       setStruck({ habitId: item.habit_id, cheer, at: Date.now() });
       // Era la única que faltaba: el día queda forjado.
-      if (!item.done_today && done === schedule.length - 1) setDayForged(true);
+      if (!restDay && !item.done_today && done === schedule.length - 1) setDayForged(true);
       grid.reload();
     } catch (requestError) {
       // 409: ya tenía repetición hoy (una por día); basta con refrescar el horario.
@@ -132,9 +134,11 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
         </p>
         <CardTitle className="text-xl font-bold tracking-[-0.03em]">La orden de hoy</CardTitle>
         <CardDescription>
-          {allDone
-            ? 'Cumpliste todo tu código. Sincroniza el día para sellarlo en el grid.'
-            : 'Un samurái no negocia con el placer: cumple, a su hora. Todo lo de hoy cuenta hasta las 23:59.'}
+          {restDay
+            ? 'Hoy es domingo: día libre. No cuenta para el reto ni rompe tu racha; si entrenas, que sea por gusto.'
+            : allDone
+              ? 'Cumpliste todo tu código. Sincroniza el día para sellarlo en el grid.'
+              : 'Un samurái no negocia con el placer: cumple, a su hora. Todo lo de hoy cuenta hasta las 23:59.'}
         </CardDescription>
       </CardHeader>
 

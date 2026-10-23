@@ -189,8 +189,8 @@ function NoArc() {
               obedece durante 90 días.
             </CodeRule>
             <CodeRule number={2} title="Forja cada día">
-              Registra en el dojo una repetición de todos ellos y sincroniza el día. Cada día cumplido es acero
-              forjado.
+              De lunes a sábado registra en el dojo una repetición de todos ellos y sincroniza el día. Cada día
+              cumplido es acero forjado. El domingo es libre: no cuenta ni rompe la racha.
             </CodeRule>
             <CodeRule number={3} title="No cedas al placer">
               {WINTER_ARC_MAX_CONSECUTIVE_FAILURES} días seguidos cedidos al placer apagan la llama y el reto termina.
