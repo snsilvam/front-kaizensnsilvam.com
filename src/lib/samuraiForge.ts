@@ -15,11 +15,11 @@ import type { WinterArcGrid } from '../types/winterArc';
  * Hoy ya está forjado: el día se sincronizó con éxito o, con el reto activo,
  * todas las reglas ya tienen repetición hoy. Lo segundo basta aunque no se
  * haya sincronizado: al cerrar el día a medianoche el backend lo juzga con
- * esas mismas repeticiones.
+ * esas mismas repeticiones. El domingo es libre: nunca se forja.
  */
 export function isTodayForged(grid: WinterArcGrid): boolean {
   const todayDay = grid.days.find((day) => day.date === grid.today);
-  if (!todayDay) return false;
+  if (!todayDay || todayDay.is_rest_day) return false;
   if (todayDay.is_successful) return true;
   const schedule = grid.schedule ?? [];
   return grid.status === 'active' && schedule.length > 0 && schedule.every((item) => item.done_today);
@@ -27,10 +27,13 @@ export function isTodayForged(grid: WinterArcGrid): boolean {
 
 /**
  * Días forjados del reto: los exitosos y los fallados con la deuda pagada,
- * contando hoy en cuanto está forjado (isTodayForged).
+ * contando hoy en cuanto está forjado (isTodayForged). Los domingos no cuentan,
+ * ni los cerrados como cumplidos antes de que fueran libres.
  */
 export function countForgedDays(grid: WinterArcGrid): number {
-  const others = grid.days.filter((day) => (day.is_successful || day.debt_paid) && day.date !== grid.today).length;
+  const others = grid.days.filter(
+    (day) => (day.is_successful || day.debt_paid) && !day.is_rest_day && day.date !== grid.today,
+  ).length;
   return others + (isTodayForged(grid) ? 1 : 0);
 }
 

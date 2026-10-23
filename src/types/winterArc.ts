@@ -46,10 +46,18 @@ export interface WinterArcDay {
    * día forjado (countForgedDays), aunque `is_successful` sigue en false.
    */
   debt_paid: boolean;
+  /**
+   * Domingo, el día libre: no cuenta ni como forjado ni como fallado. Lo decide el
+   * backend; ausente en los backends anteriores a la regla.
+   */
+  is_rest_day?: boolean;
 }
 
-/** Días siguientes a un fallo en los que se puede pagar su deuda. La regla vive en el backend. */
+/** Días siguientes a un fallo, sin contar domingos, en los que se puede pagar su deuda. La regla vive en el backend. */
 export const WINTER_ARC_DEBT_PAYMENT_DAYS = 3;
+
+/** Día libre del reto en semana ISO (7 = domingo). La regla vive en el backend. */
+export const WINTER_ARC_REST_WEEKDAY = 7;
 
 /**
  * Un día fallado cuya deuda todavía se puede pagar: registrar, con la fecha

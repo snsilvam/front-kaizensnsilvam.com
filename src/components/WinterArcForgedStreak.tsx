@@ -75,9 +75,11 @@ export function WinterArcForgedStreak({ grid }: { grid: UseWinterArcGrid }) {
       </div>
 
       <p className="text-sm text-pretty text-muted-foreground">
-        {todayForged
-          ? `Hoy ya está forjado. Vuelve mañana y van ${forged + 1}.`
-          : `Cumple hoy todas tus reglas: van ${forged + 1}.`}
+        {todayDay?.is_rest_day
+          ? `Hoy es domingo libre: descansa, no cuenta ni rompe tu racha. Mañana van ${forged + 1}.`
+          : todayForged
+            ? `Hoy ya está forjado. Vuelve mañana y van ${forged + 1}.`
+            : `Cumple hoy todas tus reglas: van ${forged + 1}.`}
         {nextTier &&
           ` ${nextTier.days - forged === 1 ? 'Falta 1 día' : `Faltan ${nextTier.days - forged} días`} para ${nextTier.name}.`}
       </p>

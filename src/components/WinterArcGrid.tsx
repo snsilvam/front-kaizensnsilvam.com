@@ -12,7 +12,7 @@ import { ApiError } from '../services/api';
 import { syncWinterArcToday } from '../services/winterArc';
 import type { WinterArcDay } from '../types/winterArc';
 
-type DayState = 'future' | 'today' | 'success' | 'paid' | 'failed';
+type DayState = 'future' | 'today' | 'success' | 'paid' | 'failed' | 'rest';
 
 interface WinterArcGridProps {
   winterArcId: string;
@@ -145,6 +145,7 @@ export function WinterArcGrid({ winterArcId, grid, hideDaySummary = false }: Win
             <Legend className={STATE_CLASS.success} label="forjado" />
             <Legend className={STATE_CLASS.paid} label="deuda pagada" />
             <Legend className={STATE_CLASS.failed} label="cedido al placer" />
+            <Legend className={STATE_CLASS.rest} label="domingo libre" />
           </ul>
         </div>
 
@@ -159,9 +160,9 @@ export function WinterArcGrid({ winterArcId, grid, hideDaySummary = false }: Win
           variant="outline"
           className="w-fit"
           onClick={syncToday}
-          disabled={failed || syncing || !todayDay}
+          disabled={failed || syncing || !todayDay || todayDay.is_rest_day}
         >
-          {syncing ? 'Sincronizando...' : 'Sincronizar hoy'}
+          {syncing ? 'Sincronizando...' : todayDay?.is_rest_day ? 'Hoy es domingo libre' : 'Sincronizar hoy'}
         </Button>
       </div>
     </section>
@@ -177,6 +178,8 @@ const STATE_CLASS: Record<DayState, string> = {
   // Escarcha clara: el día se forjó tarde, pagando la deuda. Cuenta como forjado.
   paid: 'bg-[#7cc4e8]',
   failed: 'bg-destructive',
+  // Sólo el contorno: el domingo no se forja ni se cede, se descansa.
+  rest: 'bg-transparent ring-1 ring-inset ring-border',
 };
 
 const STATE_LABEL: Record<DayState, string> = {
@@ -185,10 +188,15 @@ const STATE_LABEL: Record<DayState, string> = {
   success: 'forjado',
   paid: 'deuda pagada',
   failed: 'cedido al placer',
+  rest: 'domingo libre',
 };
 
-/** Las fechas son YYYY-MM-DD, así que se comparan como texto. */
+/**
+ * Las fechas son YYYY-MM-DD, así que se comparan como texto. El domingo va
+ * primero: aunque se haya cerrado como fallo antes de la regla, ya no cuenta.
+ */
 function dayState(day: WinterArcDay, today: string): DayState {
+  if (day.is_rest_day) return 'rest';
   if (day.is_successful) return 'success';
   if (day.debt_paid) return 'paid';
   if (day.date > today) return 'future';
