@@ -31,6 +31,22 @@ export function getWinterArcGrid(winterArcId: string): Promise<WinterArcGrid> {
 }
 
 /**
+ * PUT /api/winter-arc/:id/rules: cambia, desde hoy, qué hábitos son Reglas
+ * Inquebrantables del reto en curso. `habitIds` es la lista completa (mínimo 3);
+ * los días pasados no cambian. Responde el grid con el horario nuevo.
+ */
+export function updateWinterArcRules(winterArcId: string, habitIds: string[]): Promise<WinterArcGrid> {
+  return request<WinterArcGrid>(
+    `/api/winter-arc/${encodeURIComponent(winterArcId)}/rules`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ habit_ids: habitIds }),
+    },
+    false,
+  );
+}
+
+/**
  * GET /api/winter-arc/:id/analytics: la retrospectiva de un reto terminado
  * (completed o failed). Todo se calcula en el backend.
  */

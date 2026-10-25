@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
-import { Check, Clock, Flame, Plus, Swords } from 'lucide-react';
+import { Check, Clock, Flame, ListChecks, Plus, Swords } from 'lucide-react';
 import { HabitRepetitionDialog } from './HabitRepetitionDialog';
 import { WinterArcDayForged } from './WinterArcDayForged';
+import { WinterArcRulesDialog } from './WinterArcRulesDialog';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
@@ -56,6 +57,9 @@ interface Slot {
  * para el `today` del servidor; al guardar se recarga el grid. Cumplirla es un
  * golpe de acero (confeti desde su punto y una frase) y cumplir la última del
  * día abre la celebración de WinterArcDayForged.
+ *
+ * "Editar código" abre WinterArcRulesDialog para cambiar, desde hoy, qué
+ * hábitos son reglas; al guardar se recarga el grid.
  */
 export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
   const now = useBogotaMinutes();
@@ -67,6 +71,8 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
   const [struck, setStruck] = useState<Struck | null>(null);
   const [dayForged, setDayForged] = useState(false);
   const closeDayForged = useCallback(() => setDayForged(false), []);
+  const [editingRules, setEditingRules] = useState(false);
+  const closeRules = useCallback(() => setEditingRules(false), []);
 
   // La frase del golpe dura lo que su animación.
   useEffect(() => {
@@ -198,6 +204,11 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
           </Button>
           <span className="text-xs text-muted-foreground">Lo que registres allí aparece aquí al volver.</span>
         </div>
+
+        <Button type="button" variant="ghost" size="sm" className="w-fit text-muted-foreground" onClick={() => setEditingRules(true)}>
+          <ListChecks aria-hidden="true" />
+          Editar código
+        </Button>
       </CardContent>
 
       {registering && (
@@ -209,6 +220,15 @@ export function WinterArcSchedule({ grid }: { grid: UseWinterArcGrid }) {
           error={saveError}
           onClose={() => setRegistering(null)}
           onConfirm={(input) => saveRepetition(registering, input)}
+        />
+      )}
+
+      {editingRules && (
+        <WinterArcRulesDialog
+          winterArcId={grid.data.id}
+          ruleIds={schedule.map((item) => item.habit_id)}
+          onClose={closeRules}
+          onSaved={grid.reload}
         />
       )}
 
