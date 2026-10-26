@@ -44,3 +44,17 @@ export function formatDuration(totalMinutes: number): string {
   if (hours === 0) return `${minutes} min`;
   return minutes === 0 ? `${hours} h` : `${hours} h ${minutes} min`;
 }
+
+// Colombia no tiene horario de verano: Bogotá es siempre UTC−5.
+const BOGOTA_OFFSET_MS = 5 * 3_600_000;
+const DAY_MS = 86_400_000;
+
+/** Instante (ms) de la próxima medianoche en Bogotá: cuando se cierra el día de hoy. */
+export function bogotaDayEndsAt(now = Date.now()): number {
+  return (Math.floor((now - BOGOTA_OFFSET_MS) / DAY_MS) + 1) * DAY_MS + BOGOTA_OFFSET_MS;
+}
+
+/** Día de la semana ISO de hoy en Bogotá: 1 = lunes ... 7 = domingo. */
+export function bogotaIsoWeekday(now = Date.now()): number {
+  return new Date(now - BOGOTA_OFFSET_MS).getUTCDay() || 7;
+}
