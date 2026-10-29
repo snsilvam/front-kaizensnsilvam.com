@@ -5,6 +5,7 @@ import { Separator } from './ui/separator';
 import { PathSwitcher } from './PathSwitcher';
 import { SleepButton } from './SleepButton';
 import { UserAvatar } from './UserAvatar';
+import { WinterArcSeasonCountdown } from './WinterArcSeasonCountdown';
 import { useAuth } from '../auth/useAuth';
 
 /**
@@ -74,6 +75,8 @@ export function WinterArcLayout({ children }: { children: ReactNode }) {
             </Button>
           </div>
         </div>
+
+        <WinterArcSeasonCountdown />
 
         {/* Linea de escarcha: cierra el header en vez de un borde recto. */}
         <div
