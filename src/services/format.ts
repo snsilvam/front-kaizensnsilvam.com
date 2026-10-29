@@ -31,9 +31,9 @@ export function formatShortDate(iso: string): string {
   return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
 }
 
-/** "jueves, 25 de septiembre". */
+/** "jueves, 25 de septiembre de 2026". */
 export function formatLongToday(now = new Date()): string {
-  return now.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  return now.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 /** "1 día" / "3 días". */

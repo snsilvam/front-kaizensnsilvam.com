@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
+import { cn } from '../lib/utils';
 
 interface PageHeaderProps {
   id: string;
-  eyebrow?: string;
+  eyebrow?: ReactNode;
+  eyebrowClassName?: string;
   title: string;
   description?: ReactNode;
   /** Botones a la derecha en escritorio, debajo del texto en movil. */
@@ -10,12 +12,12 @@ interface PageHeaderProps {
 }
 
 /** Encabezado comun de las pantallas de finanzas: la misma voz en todas. */
-export function PageHeader({ id, eyebrow, title, description, actions }: PageHeaderProps) {
+export function PageHeader({ id, eyebrow, eyebrowClassName, title, description, actions }: PageHeaderProps) {
   return (
     <header className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {eyebrow && (
-          <p className="mb-2 text-xs font-semibold tracking-[0.12em] text-primary uppercase">
+          <p className={cn("mb-2 text-xs font-semibold tracking-[0.12em] text-primary uppercase", eyebrowClassName)}>
             {eyebrow}
           </p>
         )}

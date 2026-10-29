@@ -86,7 +86,13 @@ export function Home() {
     <>
       <PageHeader
         id="dashboard-title"
-        eyebrow={formatLongToday()}
+        eyebrow={
+          <>
+            <CalendarClock aria-hidden="true" className="mt-0.5 size-5 shrink-0 sm:size-6" />
+            <span>Hoy es {formatLongToday()}</span>
+          </>
+        }
+        eyebrowClassName="mb-3 flex items-start gap-2 text-lg leading-snug tracking-normal normal-case sm:text-2xl"
         title={name ? `Hola, ${name}` : 'Hola'}
         description="Esto es lo que puedes gastar y cómo va tu plan."
         actions={
