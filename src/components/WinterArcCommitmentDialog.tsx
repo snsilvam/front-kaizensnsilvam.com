@@ -9,14 +9,34 @@ interface WinterArcCommitmentDialogProps {
   error: string | null;
   onClose: () => void;
   onConfirm: (commitment: string) => void | Promise<void>;
+  /** Textos del modal; por defecto, los del último paso del setup. */
+  eyebrow?: string;
+  description?: string;
+  submitLabel?: string;
+  submittingLabel?: string;
 }
 
+const SETUP_DESCRIPTION =
+  'Al comenzar, tu cuerpo deja de ser una máquina de placer y se activa como samurái. Escribe por qué: es el ' +
+  'propósito de tus 90 días y lo verás cada día del reto.';
+
 /**
- * Último paso antes de iniciar el Winter Arc: el juramento, el propósito del
- * reto. Se monta al pulsar "Jurar mi código", así que arranca vacío en cada
- * apertura. Sin respuesta no se puede comenzar.
+ * El juramento: la respuesta a "¿Cuál es tu compromiso con tu yo de enero?".
+ * Es el último paso antes de iniciar el Winter Arc y también el compromiso de
+ * cada mes del reto (WinterArcCommitments), que cambia los textos por props.
+ * Se monta al abrirse, así que arranca vacío en cada apertura; si guardar
+ * falla, el texto se queda. Sin respuesta no se puede confirmar.
  */
-export function WinterArcCommitmentDialog({ submitting, error, onClose, onConfirm }: WinterArcCommitmentDialogProps) {
+export function WinterArcCommitmentDialog({
+  submitting,
+  error,
+  onClose,
+  onConfirm,
+  eyebrow = 'Paso 2 de 2 · El juramento',
+  description = SETUP_DESCRIPTION,
+  submitLabel = 'Activar modo samurái',
+  submittingLabel = 'Activando...',
+}: WinterArcCommitmentDialogProps) {
   const [commitment, setCommitment] = useState('');
   const trimmed = commitment.trim();
 
@@ -42,15 +62,12 @@ export function WinterArcCommitmentDialog({ submitting, error, onClose, onConfir
         >
           侍
         </div>
-        <p className="mt-4 text-[0.62rem] font-semibold tracking-[0.22em] text-[#1d6a8f] uppercase">
-          Paso 2 de 2 · El juramento
-        </p>
+        <p className="mt-4 text-[0.62rem] font-semibold tracking-[0.22em] text-[#1d6a8f] uppercase">{eyebrow}</p>
         <h2 id="winter-arc-commitment-title" className="mt-1.5 text-lg font-semibold text-foreground">
           ¿Cuál es tu compromiso con tu yo de enero?
         </h2>
         <p id="winter-arc-commitment-description" className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Al comenzar, tu cuerpo deja de ser una máquina de placer y se activa como samurái. Escribe por qué: es el
-          propósito de tus 90 días y lo verás cada día del reto.
+          {description}
         </p>
 
         <form className="mt-5 grid gap-5" onSubmit={submit}>
@@ -83,7 +100,7 @@ export function WinterArcCommitmentDialog({ submitting, error, onClose, onConfir
             </Button>
             <Button type="submit" disabled={!trimmed || submitting}>
               <Swords aria-hidden="true" />
-              {submitting ? 'Activando...' : 'Activar modo samurái'}
+              {submitting ? submittingLabel : submitLabel}
             </Button>
           </div>
         </form>

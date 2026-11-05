@@ -80,11 +80,24 @@ export interface WinterArcDebtHabit {
   paid: boolean;
 }
 
+/**
+ * El compromiso de un mes del reto: la respuesta a "¿Cuál es tu compromiso con
+ * tu yo de enero?" escrita ese mes. Hay a lo sumo uno por mes y no se edita.
+ */
+export interface WinterArcCommitment {
+  /** Mes del compromiso en Bogotá, YYYY-MM. Lo decide el servidor. */
+  month: string;
+  commitment: string;
+  created_at: string;
+}
+
 /** Respuesta de GET /api/winter-arc/:id/grid. */
 export interface WinterArcGrid {
   id: string;
-  /** Propósito del reto; vacío en retos anteriores a la pregunta. */
+  /** Compromiso con el que se inició el reto; vacío en retos anteriores a la pregunta. */
   commitment: string;
+  /** Historial de compromisos, uno por mes, del más antiguo al más reciente. */
+  commitments: WinterArcCommitment[];
   start_date: string;
   end_date: string;
   status: WinterArcStatus;

@@ -1,5 +1,11 @@
 import { request } from './api';
-import type { WinterArc, WinterArcAnalytics, WinterArcDay, WinterArcGrid } from '../types/winterArc';
+import type {
+  WinterArc,
+  WinterArcAnalytics,
+  WinterArcCommitment,
+  WinterArcDay,
+  WinterArcGrid,
+} from '../types/winterArc';
 
 /**
  * POST /api/winter-arc/setup: inicia el reto de 90 días con los hábitos
@@ -41,6 +47,23 @@ export function updateWinterArcRules(winterArcId: string, habitIds: string[]): P
     {
       method: 'PUT',
       body: JSON.stringify({ habit_ids: habitIds }),
+    },
+    false,
+  );
+}
+
+/**
+ * POST /api/winter-arc/:id/commitments: agrega el compromiso del mes en curso
+ * al historial del reto (máx. 500 caracteres). El mes lo decide el servidor
+ * (America/Bogota); los de meses anteriores no cambian. Responde 409 si el mes
+ * ya tiene compromiso o el reto ya no está en curso.
+ */
+export function addWinterArcCommitment(winterArcId: string, commitment: string): Promise<WinterArcCommitment> {
+  return request<WinterArcCommitment>(
+    `/api/winter-arc/${encodeURIComponent(winterArcId)}/commitments`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ commitment }),
     },
     false,
   );
