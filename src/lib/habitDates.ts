@@ -73,6 +73,11 @@ export function shiftMonth(dayKey: string, delta: number): string {
   return toDayKey(Math.floor(index / 12), (index % 12) + 1, 1);
 }
 
+/** "2026-11" (o "2026-11-05") -> "noviembre". */
+export function monthName(monthKey: string): string {
+  return MONTH_NAMES[parseDayKey(monthKey).month - 1] ?? '';
+}
+
 /** "2026-08-01" -> "Agosto 2026". */
 export function monthLabel(dayKey: string): string {
   const { year, month } = parseDayKey(dayKey);

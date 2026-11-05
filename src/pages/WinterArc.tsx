@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Swords, Trophy } from 'lucide-react';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { WinterArcAnalytics } from '../components/WinterArcAnalytics';
+import { WinterArcCommitments } from '../components/WinterArcCommitments';
 import { WinterArcDebts } from '../components/WinterArcDebts';
 import { WinterArcForgedStreak } from '../components/WinterArcForgedStreak';
 import { WinterArcGrid } from '../components/WinterArcGrid';
@@ -78,7 +79,7 @@ function CurrentArc({ manifesto }: { manifesto: ReactNode }) {
   }
 
   if (current.data.status === 'active') {
-    return <ActiveArc winterArcId={current.data.id} commitment={current.data.commitment} manifesto={manifesto} />;
+    return <ActiveArc winterArcId={current.data.id} manifesto={manifesto} />;
   }
 
   // Reto terminado (perdido o completado): su retrospectiva encabeza, el grid
@@ -95,7 +96,7 @@ function CurrentArc({ manifesto }: { manifesto: ReactNode }) {
         </Alert>
       )}
 
-      <Commitment text={current.data.commitment} />
+      <WinterArcCommitments grid={current.data} />
 
       <WinterArcAnalytics winterArcId={current.data.id} />
 
@@ -110,20 +111,13 @@ function CurrentArc({ manifesto }: { manifesto: ReactNode }) {
 }
 
 /**
- * El reto en curso: la racha de días forjados encabeza, luego lo que toca hoy
- * (las deudas por saldar y la orden del día, en el orden de las horas) y el
- * progreso de los 90 días debajo. Todos leen el mismo grid, así que al sincronizar o pagar una deuda
- * se actualizan juntos.
+ * El reto en curso: la racha de días forjados encabeza, luego el compromiso
+ * del mes (o la invitación a escribirlo), lo que toca hoy (las deudas por
+ * saldar y la orden del día, en el orden de las horas) y el progreso de los
+ * 90 días debajo. Todos leen el mismo grid, así que al sincronizar, pagar una
+ * deuda o jurar el compromiso del mes se actualizan juntos.
  */
-function ActiveArc({
-  winterArcId,
-  commitment,
-  manifesto,
-}: {
-  winterArcId: string;
-  commitment?: string;
-  manifesto: ReactNode;
-}) {
+function ActiveArc({ winterArcId, manifesto }: { winterArcId: string; manifesto: ReactNode }) {
   const grid = useWinterArcGrid(winterArcId);
 
   return (
@@ -132,7 +126,7 @@ function ActiveArc({
 
       {manifesto}
 
-      <Commitment text={commitment} />
+      {grid.data && <WinterArcCommitments grid={grid.data} onAdded={grid.reload} />}
 
       <WinterArcDebts grid={grid} />
 
@@ -157,20 +151,6 @@ function ArcGridCard({ winterArcId }: { winterArcId: string }) {
         <WinterArcGrid winterArcId={winterArcId} grid={grid} />
       </CardContent>
     </Card>
-  );
-}
-
-/** El propósito que el usuario escribió al iniciar el reto. Los retos anteriores a la pregunta no lo tienen. */
-function Commitment({ text }: { text?: string }) {
-  if (!text) return null;
-
-  return (
-    <figure className="grid gap-1.5 border-l-2 border-[#7cc4e8] pl-4">
-      <figcaption className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-        Tu compromiso con tu yo de enero
-      </figcaption>
-      <blockquote className="text-base leading-relaxed whitespace-pre-line">{text}</blockquote>
-    </figure>
   );
 }
 
