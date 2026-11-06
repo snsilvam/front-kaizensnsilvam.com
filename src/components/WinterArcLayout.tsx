@@ -3,6 +3,7 @@ import { LogOut } from 'lucide-react';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { PathSwitcher } from './PathSwitcher';
+import { CoachButton } from './CoachButton';
 import { SleepButton } from './SleepButton';
 import { UserAvatar } from './UserAvatar';
 import { WinterArcSeasonCountdown } from './WinterArcSeasonCountdown';
@@ -53,6 +54,7 @@ export function WinterArcLayout({ children }: { children: ReactNode }) {
           </p>
 
           <div className="flex items-center gap-2.5">
+            <CoachButton />
             <SleepButton />
 
             <PathSwitcher current="winter-arc" tone="polar" />
