@@ -7,6 +7,7 @@ import { Sebas } from './pages/Sebas';
 import { AppLayout } from './components/AppLayout';
 import { Habits } from './pages/Habits';
 import { Market } from './pages/Market';
+import { Debts } from './pages/Debts';
 import { WinterArc } from './pages/WinterArc';
 import { WinterArcSetup } from './pages/WinterArcSetup';
 import { WinterArcNewHabit } from './pages/WinterArcNewHabit';
@@ -42,6 +43,8 @@ function layoutPage(path: string): ReactNode | null {
       return <RegisterPendingPayment />;
     case '/mercado':
       return <Market />;
+    case '/deudas':
+      return <Debts />;
     case '/habito-1':
       return <RegisterHabit1 />;
     case '/sebas':
